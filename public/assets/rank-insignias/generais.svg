@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="100" height="100">
+  <rect width="90" height="90" x="5" y="5" rx="8" fill="#163826" stroke="#C5962B" stroke-width="3"/>
+  <path d="M 20 75 C 20 40, 35 25, 50 20 C 65 25, 80 40, 80 75" fill="none" stroke="#C5962B" stroke-width="3" stroke-dasharray="4,3"/>
+  <!-- Stars -->
+  <polygon points="50,28 53,38 63,38 55,44 58,54 50,48 42,54 45,44 37,38 47,38" fill="#C5962B"/>
+  <polygon points="32,48 35,56 43,56 37,61 39,69 32,64 25,69 27,61 21,56 29,56" fill="#C5962B"/>
+  <polygon points="68,48 71,56 79,56 73,61 75,69 68,64 61,69 63,61 57,56 65,56" fill="#C5962B"/>
+</svg>

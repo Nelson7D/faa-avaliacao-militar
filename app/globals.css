@@ -1,0 +1,91 @@
+@import "tailwindcss/base";
+@import "tailwindcss/components";
+@import "tailwindcss/utilities";
+
+:root {
+  --background: #F8FAFC;
+  --foreground: #0F172A;
+  --primary-color: #0F3323;
+  --secondary-color: #B89047;
+}
+
+body {
+  background-color: #F8FAFC;
+  color: #0F172A;
+  font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Tactical Data Monospace */
+.font-data-mono {
+  font-family: var(--font-geist-mono), 'JetBrains Mono', monospace;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.02em;
+}
+
+/* FAI Official Print / PDF Styles */
+@media print {
+  body {
+    background: #FFFFFF !important;
+    color: #000000 !important;
+  }
+  .no-print {
+    display: none !important;
+  }
+  .print-only {
+    display: block !important;
+  }
+  .fai-print-sheet {
+    box-shadow: none !important;
+    border: 1px solid #CBD5E1 !important;
+    page-break-inside: avoid;
+  }
+}
+
+/* Modern Minimalist Scrollbar */
+::-webkit-scrollbar {
+  width: 5px;
+  height: 5px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: #CBD5E1;
+  border-radius: 9999px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #94A3B8;
+}
+
+/* Clean Border Utilities for FAI Tables */
+.fai-border-grid {
+  border: 1px solid #E2E8F0;
+}
+.fai-border-cell {
+  border-bottom: 1px solid #F1F5F9;
+  border-right: 1px solid #F1F5F9;
+}
+.fai-border-cell:last-child {
+  border-right: none;
+}
+.fai-row:last-child .fai-border-cell {
+  border-bottom: none;
+}
+
+.table-zebra tr:nth-child(even) {
+  background-color: #F8FAFC;
+}
+
+/* Card Subtle Transition */
+.executive-card {
+  background: #FFFFFF;
+  border: 1px solid rgba(226, 232, 240, 0.85);
+  box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.03), 0 1px 2px -1px rgb(0 0 0 / 0.02);
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.executive-card:hover {
+  border-color: rgba(203, 213, 225, 1);
+  box-shadow: 0 4px 12px -2px rgb(0 0 0 / 0.06), 0 2px 4px -2px rgb(0 0 0 / 0.03);
+}

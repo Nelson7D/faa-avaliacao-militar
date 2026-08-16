@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 500 500" width="500" height="500" opacity="0.12">
+  <!-- Outer Shield Contour -->
+  <path d="M 250 20 C 370 20, 440 60, 440 160 C 440 320, 340 430, 250 480 C 160 430, 60 320, 60 160 C 60 60, 130 20, 250 20 Z" fill="none" stroke="#163826" stroke-width="12"/>
+  <path d="M 250 40 C 355 40, 420 75, 420 165 C 420 310, 330 410, 250 455 C 170 410, 80 310, 80 165 C 80 75, 145 40, 250 40 Z" fill="none" stroke="#C5962B" stroke-width="4"/>
+  
+  <!-- Central Gear Segment -->
+  <path d="M 250 140 A 110 110 0 0 1 355 270 L 325 260 A 80 80 0 0 0 250 170 Z" fill="#163826"/>
+  <!-- Gear Teeth -->
+  <rect x="350" y="220" width="20" height="15" rx="3" fill="#163826" transform="rotate(15 360 227)"/>
+  <rect x="340" y="270" width="20" height="15" rx="3" fill="#163826" transform="rotate(45 350 277)"/>
+  <rect x="305" y="315" width="20" height="15" rx="3" fill="#163826" transform="rotate(75 315 322)"/>
+
+  <!-- Crossed Machete (Catana) -->
+  <path d="M 150 350 L 340 160 C 355 145, 375 145, 380 155 C 385 165, 375 185, 355 200 L 180 370 Z" fill="#C5962B"/>
+  <rect x="135" y="340" width="45" height="12" rx="4" fill="#163826" transform="rotate(-45 157 346)"/>
+  
+  <!-- Five-pointed Star (Estrela Amarela) -->
+  <polygon points="250,110 263,145 300,145 270,167 282,202 250,180 218,202 230,167 200,145 237,145" fill="#C5962B"/>
+
+  <!-- Watermark Text -->
+  <text x="250" y="400" font-family="'Geist', 'Inter', sans-serif" font-size="18" font-weight="900" fill="#163826" text-anchor="middle" letter-spacing="4">REPÚBLICA DE ANGOLA</text>
+  <text x="250" y="422" font-family="'Geist', 'Inter', sans-serif" font-size="14" font-weight="700" fill="#C5962B" text-anchor="middle" letter-spacing="3">FORÇAS ARMADAS ANGOLANAS</text>
+</svg>

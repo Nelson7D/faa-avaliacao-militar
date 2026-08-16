@@ -1,0 +1,95 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // =========================================================================
+    // HELPER FUNCTIONS (RLS & Regimental Access Control)
+    // =========================================================================
+    
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+
+    function getUserDoc() {
+      return get(/databases/$(database)/documents/users/$(request.auth.uid));
+    }
+
+    function isAdmin() {
+      return isAuthenticated() && (
+        getUserDoc().data.role == 'ADMIN'
+      );
+    }
+
+    function isDPQ() {
+      return isAuthenticated() && (
+        getUserDoc().data.role == 'DPQ' || 
+        isAdmin()
+      );
+    }
+
+    function isCommander() {
+      return isAuthenticated() && (
+        getUserDoc().data.role == 'CMDTE' || 
+        isDPQ()
+      );
+    }
+
+    function isEvaluator() {
+      return isAuthenticated() && (
+        getUserDoc().data.role in ['AVALIADOR_1', 'AVALIADOR_2', 'CMDTE', 'DPQ', 'ADMIN']
+      );
+    }
+
+    // =========================================================================
+    // 1. UTILIZADORES / PERFIS (users)
+    // =========================================================================
+    match /users/{userId} {
+      allow read: if isAuthenticated();
+      allow create, update: if isOwner(userId) || isDPQ() || isAdmin();
+      allow delete: if isDPQ() || isAdmin();
+    }
+
+    // =========================================================================
+    // 2. EFETIVO MILITAR & FOLHA MATRÍCULA (militares)
+    // =========================================================================
+    match /militares/{nip} {
+      allow read: if isAuthenticated();
+      allow create, update: if isAuthenticated();
+      allow delete: if isDPQ() || isAdmin();
+    }
+
+    // =========================================================================
+    // 3. FICHAS DE AVALIAÇÃO INDIVIDUAL (fais)
+    // =========================================================================
+    match /fais/{faiId} {
+      allow read: if isAuthenticated();
+      allow create: if isAuthenticated();
+      allow update: if isAuthenticated();
+      allow delete: if isDPQ() || isAdmin();
+    }
+
+    // =========================================================================
+    // 4. IMPUGNAÇÕES E RECURSOS HIERÁRQUICOS (impugnacoes)
+    // =========================================================================
+    match /impugnacoes/{impugnacaoId} {
+      allow read: if isAuthenticated();
+      allow create: if isAuthenticated();
+      allow update: if isAuthenticated();
+      allow delete: if isDPQ() || isAdmin();
+    }
+
+    // =========================================================================
+    // 5. REGISTOS DE AUDITORIA REGIMENTAL (audit_logs)
+    // =========================================================================
+    match /audit_logs/{logId} {
+      allow read: if isAuthenticated();
+      allow create: if isAuthenticated();
+      // Imutabilidade de auditoria militar: logs nunca podem ser alterados ou apagados
+      allow update, delete: if false;
+    }
+  }
+}

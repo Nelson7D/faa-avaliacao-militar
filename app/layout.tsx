@@ -1,0 +1,33 @@
+import type { Metadata } from 'next';
+import { Geist, Geist_Mono } from 'next/font/google';
+import './globals.css';
+import { AppLayoutShell } from '@/components/layout/app-layout-shell';
+
+const geistSans = Geist({
+  variable: '--font-geist-sans',
+  subsets: ['latin'],
+});
+
+const geistMono = Geist_Mono({
+  variable: '--font-geist-mono',
+  subsets: ['latin'],
+});
+
+export const metadata: Metadata = {
+  title: 'SISTEMA DE AVALIAÇÃO INDIVIDUAL DOS MILITARES - FAA',
+  description: 'Sistema Regimental de Avaliação Individual das Forças Armadas Angolanas',
+};
+
+export default function RootLayout({
+  children,
+}: Readonly<{
+  children: React.ReactNode;
+}>) {
+  return (
+    <html lang="pt-AO" className={`${geistSans.variable} ${geistMono.variable}`}>
+      <body className="min-h-screen bg-background font-sans antialiased text-foreground">
+        <AppLayoutShell>{children}</AppLayoutShell>
+      </body>
+    </html>
+  );
+}
