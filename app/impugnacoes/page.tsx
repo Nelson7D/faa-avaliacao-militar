@@ -1,7 +1,13 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { fetchImpugnacoes, saveImpugnacaoDocument, registrarAuditLog } from '@/services/firebase/firestore';
+import {
+  fetchImpugnacoes,
+  saveImpugnacaoDocument,
+  registrarAuditLog,
+  fetchFaiById,
+  saveFaiDocument,
+} from '@/services/firebase/firestore';
 import { ImpugnacaoDocument } from '@/types/impugnacao';
 import { formatNip, formatDataPt } from '@/lib/utils';
 import {
@@ -14,6 +20,8 @@ import {
   FileText,
   ShieldCheck,
   Send,
+  Lock,
+  PlusCircle,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
@@ -27,8 +35,11 @@ import {
   TableHead,
   TableCell,
 } from '@/components/ui/table';
+import { useAuth } from '@/context/auth-context';
+import { calcularMediaRegimental } from '@/lib/calculo-fai';
 
 export default function ImpugnacoesPage() {
+  const { profile } = useAuth();
   const [impugnacoes, setImpugnacoes] = useState<ImpugnacaoDocument[]>([]);
   const [selectedId, setSelectedId] = useState<string>('');
   const [loading, setLoading] = useState(true);
@@ -38,9 +49,11 @@ export default function ImpugnacoesPage() {
   // Commander Dispatch Form State
   const [decisaoCmdte, setDecisaoCmdte] = useState<'DEFERIDO_TOTAL' | 'DEFERIDO_PARCIAL' | 'INDEFERIDO'>('DEFERIDO_TOTAL');
   const [fundamentacaoCmdte, setFundamentacaoCmdte] = useState('');
-  const [cmdteNome, setCmdteNome] = useState('General de Divisão J. Santos');
-  const [cmdteNip, setCmdteNip] = useState('00192837');
+  const [cmdteNome, setCmdteNome] = useState(profile ? `${profile.posto} ${profile.nomeGuerra || profile.nomeCompleto}` : '');
+  const [cmdteNip, setCmdteNip] = useState(profile?.nip || '');
   const [despachoSuccess, setDespachoSuccess] = useState('');
+
+  const isCmdteOrAdmin = profile?.role === 'CMDTE' || profile?.role === 'DPQ' || profile?.role === 'ADMIN';
 
   const loadData = async () => {
     try {
@@ -60,6 +73,13 @@ export default function ImpugnacoesPage() {
     loadData();
   }, []);
 
+  useEffect(() => {
+    if (profile) {
+      setCmdteNome(profile.posto ? `${profile.posto} ${profile.nomeCompleto}` : profile.nomeCompleto);
+      setCmdteNip(profile.nip);
+    }
+  }, [profile]);
+
   const selectedCase = impugnacoes.find((i) => i.id === selectedId) || impugnacoes[0];
 
   const total = impugnacoes.length;
@@ -77,7 +97,7 @@ export default function ImpugnacoesPage() {
   });
 
   const handleSubmeterDespacho = async () => {
-    if (!selectedCase) return;
+    if (!selectedCase || !isCmdteOrAdmin) return;
 
     let novoStatus: ImpugnacaoDocument['status'] = 'DEFERIDA';
     if (decisaoCmdte === 'INDEFERIDO') novoStatus = 'INDEFERIDA';
@@ -88,7 +108,7 @@ export default function ImpugnacoesPage() {
       status: novoStatus,
       despachoCmdte: {
         decisao: decisaoCmdte,
-        fundamentacao: fundamentacaoCmdte || 'Despacho fundamentado emitido pelo Comando da U/E/O.',
+        fundamentacao: fundamentacaoCmdte || 'Despacho fundamentado emitido pelo Comando da U/E/O nos termos do Manual VII FAA.',
         cmdteNip,
         cmdteNome,
         data: new Date().toISOString().split('T')[0],
@@ -99,10 +119,44 @@ export default function ImpugnacoesPage() {
 
     await saveImpugnacaoDocument(updated);
 
+    // Se deferido, retifica automaticamente as notas e recalcula a FAI associada
+    if (decisaoCmdte !== 'INDEFERIDO' && selectedCase.faiId) {
+      try {
+        const fai = await fetchFaiById(selectedCase.faiId);
+        if (fai) {
+          const novaGrelha = { ...(fai.grelha || {}) };
+          selectedCase.fatoresContestados.forEach((fc) => {
+            novaGrelha[fc.fatorId] = {
+              ...(novaGrelha[fc.fatorId] || {}),
+              cmdte: fc.notaRequerida as any,
+            };
+          });
+
+          const rec = calcularMediaRegimental(
+            fai.militar?.categoria || 'OFICIAL',
+            novaGrelha,
+            'efetivo',
+            Boolean(fai.militar?.feridoEmServico)
+          );
+
+          await saveFaiDocument({
+            ...fai,
+            grelha: novaGrelha,
+            mediaPonderada: rec.MP,
+            divisor: rec.divisor,
+            classificacao: rec.classificacao,
+            updatedAt: new Date().toISOString(),
+          });
+        }
+      } catch (faiErr) {
+        console.warn('Aviso ao retificar FAI:', faiErr);
+      }
+    }
+
     await registrarAuditLog({
       operadorNip: cmdteNip,
       operadorNome: cmdteNome,
-      operadorPosto: 'General de Divisão',
+      operadorPosto: profile?.posto || 'Oficial',
       acao: `DESPACHO_IMPUGNACAO_${decisaoCmdte}`,
       entidade: 'IMPUGNACAO',
       entidadeId: selectedCase.id,
@@ -113,8 +167,8 @@ export default function ImpugnacoesPage() {
       },
     });
 
-    setDespachoSuccess('Despacho militar assinado e registrado com sucesso!');
-    setTimeout(() => setDespachoSuccess(''), 3000);
+    setDespachoSuccess('Despacho de comando assinado e notas retificadas na FAI com sucesso!');
+    setTimeout(() => setDespachoSuccess(''), 4000);
     loadData();
   };
 
@@ -124,7 +178,7 @@ export default function ImpugnacoesPage() {
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 pb-4 border-b border-slate-200/80">
         <div>
           <div className="flex items-center gap-2">
-            <Scale className="w-5 h-5 text-primary" />
+            <Scale className="w-5 h-5 text-[#B89047]" />
             <h2 className="text-xl font-bold text-slate-900 tracking-tight">
               Módulo de Impugnações & Recursos Hierárquicos
             </h2>
@@ -146,28 +200,34 @@ export default function ImpugnacoesPage() {
           <div className="text-[11px] text-slate-400 font-mono">100% dos registos</div>
         </div>
 
-        <div className="executive-card rounded-2xl p-5 flex flex-col justify-between h-28 shadow-card border-l-4 border-l-[#B89047]">
+        <div className="executive-card rounded-2xl p-5 flex flex-col justify-between h-28 shadow-card border border-slate-200/90">
           <div className="flex justify-between items-start">
             <span className="text-[11px] font-semibold text-slate-500 uppercase">Em Prazo (15 Dias)</span>
-            <Clock className="w-4 h-4 text-[#B89047]" />
+            <div className="w-6 h-6 rounded-lg bg-amber-50 border border-amber-200 flex items-center justify-center">
+              <Clock className="w-3.5 h-3.5 text-[#B89047]" />
+            </div>
           </div>
           <div className="font-data-mono text-3xl font-bold text-[#B89047]">{emPrazo}</div>
           <div className="text-[11px] text-amber-800 font-medium font-mono">Em análise regimental</div>
         </div>
 
-        <div className="executive-card rounded-2xl p-5 flex flex-col justify-between h-28 shadow-card border-l-4 border-l-emerald-600">
+        <div className="executive-card rounded-2xl p-5 flex flex-col justify-between h-28 shadow-card border border-slate-200/90">
           <div className="flex justify-between items-start">
             <span className="text-[11px] font-semibold text-slate-500 uppercase">Deferidas / Retificadas</span>
-            <CheckCircle2 className="w-4 h-4 text-emerald-600" />
+            <div className="w-6 h-6 rounded-lg bg-emerald-50 border border-emerald-200 flex items-center justify-center">
+              <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
+            </div>
           </div>
           <div className="font-data-mono text-3xl font-bold text-emerald-700">{deferidas}</div>
           <div className="text-[11px] text-emerald-700 font-mono font-medium">Notas ajustadas</div>
         </div>
 
-        <div className="executive-card rounded-2xl p-5 flex flex-col justify-between h-28 shadow-card border-l-4 border-l-rose-500">
+        <div className="executive-card rounded-2xl p-5 flex flex-col justify-between h-28 shadow-card border border-slate-200/90">
           <div className="flex justify-between items-start">
             <span className="text-[11px] font-semibold text-slate-500 uppercase">Indeferidas</span>
-            <XCircle className="w-4 h-4 text-rose-500" />
+            <div className="w-6 h-6 rounded-lg bg-rose-50 border border-rose-200 flex items-center justify-center">
+              <XCircle className="w-3.5 h-3.5 text-rose-500" />
+            </div>
           </div>
           <div className="font-data-mono text-3xl font-bold text-rose-600">{indeferidas}</div>
           <div className="text-[11px] text-rose-600 font-mono font-medium">Mantida a nota original</div>
@@ -200,7 +260,7 @@ export default function ImpugnacoesPage() {
             <div className="flex bg-slate-100 p-1 rounded-xl border border-slate-200/80 text-[11px]">
               <button
                 onClick={() => setFiltroTipo('TODAS')}
-                className={`flex-1 py-1 rounded-lg font-medium transition-all ${
+                className={`flex-1 py-1 rounded-lg font-medium transition-all cursor-pointer ${
                   filtroTipo === 'TODAS' ? 'bg-white text-slate-900 font-semibold shadow-xs' : 'text-slate-500 hover:text-slate-900'
                 }`}
               >
@@ -208,7 +268,7 @@ export default function ImpugnacoesPage() {
               </button>
               <button
                 onClick={() => setFiltroTipo('RECLAMACAO')}
-                className={`flex-1 py-1 rounded-lg font-medium transition-all ${
+                className={`flex-1 py-1 rounded-lg font-medium transition-all cursor-pointer ${
                   filtroTipo === 'RECLAMACAO' ? 'bg-white text-slate-900 font-semibold shadow-xs' : 'text-slate-500 hover:text-slate-900'
                 }`}
               >
@@ -216,7 +276,7 @@ export default function ImpugnacoesPage() {
               </button>
               <button
                 onClick={() => setFiltroTipo('RECURSO_HIERARQUICO')}
-                className={`flex-1 py-1 rounded-lg font-medium transition-all ${
+                className={`flex-1 py-1 rounded-lg font-medium transition-all cursor-pointer ${
                   filtroTipo === 'RECURSO_HIERARQUICO' ? 'bg-white text-slate-900 font-semibold shadow-xs' : 'text-slate-500 hover:text-slate-900'
                 }`}
               >
@@ -342,97 +402,121 @@ export default function ImpugnacoesPage() {
                 </div>
               </div>
 
-              {/* Commander Dispatch Form */}
+              {/* Commander Dispatch Form or Consultation Mode */}
               <div className="rounded-2xl border border-slate-200/80 p-5 bg-slate-50/50 space-y-4 shadow-2xs">
-                <div className="flex items-center gap-2 border-b border-slate-200/80 pb-3">
-                  <ShieldCheck className="w-4 h-4 text-[#B89047]" />
-                  <h4 className="text-xs font-semibold text-slate-900 uppercase tracking-tight">
-                    Despacho e Decisão do Comandante da U/E/O
-                  </h4>
-                </div>
-
-                <div className="flex flex-wrap items-center gap-4 text-xs font-medium">
-                  <label className="flex items-center gap-2 cursor-pointer bg-white px-3 py-1.5 rounded-lg border border-slate-200 shadow-2xs">
-                    <input
-                      type="radio"
-                      name="decisao_cmdte"
-                      checked={decisaoCmdte === 'DEFERIDO_TOTAL'}
-                      onChange={() => setDecisaoCmdte('DEFERIDO_TOTAL')}
-                      className="accent-emerald-700"
-                    />
-                    <span className="text-emerald-900 font-semibold">Deferir Totalmente</span>
-                  </label>
-
-                  <label className="flex items-center gap-2 cursor-pointer bg-white px-3 py-1.5 rounded-lg border border-slate-200 shadow-2xs">
-                    <input
-                      type="radio"
-                      name="decisao_cmdte"
-                      checked={decisaoCmdte === 'DEFERIDO_PARCIAL'}
-                      onChange={() => setDecisaoCmdte('DEFERIDO_PARCIAL')}
-                      className="accent-[#B89047]"
-                    />
-                    <span className="text-amber-900 font-semibold">Deferir Parcialmente</span>
-                  </label>
-
-                  <label className="flex items-center gap-2 cursor-pointer bg-white px-3 py-1.5 rounded-lg border border-slate-200 shadow-2xs">
-                    <input
-                      type="radio"
-                      name="decisao_cmdte"
-                      checked={decisaoCmdte === 'INDEFERIDO'}
-                      onChange={() => setDecisaoCmdte('INDEFERIDO')}
-                      className="accent-rose-600"
-                    />
-                    <span className="text-rose-900 font-semibold">Indeferir</span>
-                  </label>
-                </div>
-
-                <div>
-                  <label className="text-xs font-medium text-slate-700 block mb-1">
-                    Fundamentação do Despacho de Comando
-                  </label>
-                  <Textarea
-                    value={fundamentacaoCmdte}
-                    onChange={(e) => setFundamentacaoCmdte(e.target.value)}
-                    placeholder="Insira os fundamentos regimentais da decisão..."
-                    className="text-xs bg-white border-slate-200 rounded-lg"
-                    rows={3}
-                  />
-                </div>
-
-                <div className="grid grid-cols-2 gap-3">
-                  <div>
-                    <label className="text-xs font-medium text-slate-700 block mb-1">
-                      Comandante Responsável
-                    </label>
-                    <Input
-                      value={cmdteNome}
-                      onChange={(e) => setCmdteNome(e.target.value)}
-                      className="text-xs bg-white border-slate-200 rounded-lg"
-                    />
+                <div className="flex justify-between items-center border-b border-slate-200/80 pb-3">
+                  <div className="flex items-center gap-2">
+                    <ShieldCheck className="w-4 h-4 text-[#B89047]" />
+                    <h4 className="text-xs font-semibold text-slate-900 uppercase tracking-tight">
+                      Despacho e Decisão do Comandante da U/E/O
+                    </h4>
                   </div>
-                  <div>
-                    <label className="text-xs font-medium text-slate-700 block mb-1">
-                      NIP do Comandante
-                    </label>
-                    <Input
-                      value={cmdteNip}
-                      onChange={(e) => setCmdteNip(e.target.value)}
-                      mono
-                      className="text-xs bg-white border-slate-200 rounded-lg"
-                    />
-                  </div>
+                  {!isCmdteOrAdmin && (
+                    <span className="text-[10px] font-mono text-slate-500 flex items-center gap-1">
+                      <Lock className="w-3 h-3 text-slate-400" /> Apenas Consulta
+                    </span>
+                  )}
                 </div>
 
-                <div className="pt-2 flex justify-end">
-                  <Button
-                    variant="default"
-                    size="sm"
-                    onClick={handleSubmeterDespacho}
-                    className="text-xs flex items-center gap-1.5 shadow-xs"
-                  >
-                    <Send className="w-3.5 h-3.5" /> Assinar e Emitir Despacho Oficial
-                  </Button>
-                </div>
+                {selectedCase.despachoCmdte && (
+                  <div className="p-3.5 bg-white border border-slate-200 rounded-xl space-y-1.5 text-xs">
+                    <div className="flex items-center justify-between font-bold text-slate-900">
+                      <span>Decisão: {selectedCase.despachoCmdte.decisao}</span>
+                      <span className="font-mono text-slate-500">{selectedCase.despachoCmdte.data}</span>
+                    </div>
+                    <p className="text-slate-700 italic">{selectedCase.despachoCmdte.fundamentacao}</p>
+                    <p className="text-[11px] text-slate-500 font-mono">
+                      Assinado por: {selectedCase.despachoCmdte.cmdteNome} (NIP {selectedCase.despachoCmdte.cmdteNip})
+                    </p>
+                  </div>
+                )}
+
+                {isCmdteOrAdmin && (
+                  <>
+                    <div className="flex flex-wrap items-center gap-4 text-xs font-medium">
+                      <label className="flex items-center gap-2 cursor-pointer bg-white px-3 py-1.5 rounded-lg border border-slate-200 shadow-2xs">
+                        <input
+                          type="radio"
+                          name="decisao_cmdte"
+                          checked={decisaoCmdte === 'DEFERIDO_TOTAL'}
+                          onChange={() => setDecisaoCmdte('DEFERIDO_TOTAL')}
+                          className="accent-emerald-700"
+                        />
+                        <span className="text-emerald-900 font-semibold">Deferir Totalmente (Retifica FAI)</span>
+                      </label>
+
+                      <label className="flex items-center gap-2 cursor-pointer bg-white px-3 py-1.5 rounded-lg border border-slate-200 shadow-2xs">
+                        <input
+                          type="radio"
+                          name="decisao_cmdte"
+                          checked={decisaoCmdte === 'DEFERIDO_PARCIAL'}
+                          onChange={() => setDecisaoCmdte('DEFERIDO_PARCIAL')}
+                          className="accent-[#B89047]"
+                        />
+                        <span className="text-amber-900 font-semibold">Deferir Parcialmente</span>
+                      </label>
+
+                      <label className="flex items-center gap-2 cursor-pointer bg-white px-3 py-1.5 rounded-lg border border-slate-200 shadow-2xs">
+                        <input
+                          type="radio"
+                          name="decisao_cmdte"
+                          checked={decisaoCmdte === 'INDEFERIDO'}
+                          onChange={() => setDecisaoCmdte('INDEFERIDO')}
+                          className="accent-rose-600"
+                        />
+                        <span className="text-rose-900 font-semibold">Indeferir</span>
+                      </label>
+                    </div>
+
+                    <div>
+                      <label className="text-xs font-medium text-slate-700 block mb-1">
+                        Fundamentação do Despacho de Comando
+                      </label>
+                      <Textarea
+                        value={fundamentacaoCmdte}
+                        onChange={(e) => setFundamentacaoCmdte(e.target.value)}
+                        placeholder="Insira os fundamentos regimentais da decisão..."
+                        className="text-xs bg-white border-slate-200 rounded-lg"
+                        rows={3}
+                      />
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-3">
+                      <div>
+                        <label className="text-xs font-medium text-slate-700 block mb-1">
+                          Comandante Responsável
+                        </label>
+                        <Input
+                          value={cmdteNome}
+                          onChange={(e) => setCmdteNome(e.target.value)}
+                          className="text-xs bg-white border-slate-200 rounded-lg"
+                        />
+                      </div>
+                      <div>
+                        <label className="text-xs font-medium text-slate-700 block mb-1">
+                          NIP do Comandante
+                        </label>
+                        <Input
+                          value={cmdteNip}
+                          onChange={(e) => setCmdteNip(e.target.value)}
+                          mono
+                          className="text-xs bg-white border-slate-200 rounded-lg"
+                        />
+                      </div>
+                    </div>
+
+                    <div className="pt-2 flex justify-end">
+                      <Button
+                        variant="default"
+                        size="sm"
+                        onClick={handleSubmeterDespacho}
+                        className="text-xs flex items-center gap-1.5 shadow-xs cursor-pointer"
+                      >
+                        <Send className="w-3.5 h-3.5" /> Assinar e Emitir Despacho Oficial
+                      </Button>
+                    </div>
+                  </>
+                )}
               </div>
             </div>
           </div>
@@ -441,3 +525,4 @@ export default function ImpugnacoesPage() {
     </div>
   );
 }
+

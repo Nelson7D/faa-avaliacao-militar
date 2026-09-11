@@ -44,7 +44,7 @@ export function Bloco10Preferencias({
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
         <div>
           <h3 className="text-xs font-bold text-primary uppercase tracking-wider flex items-center gap-2">
-            <span className="w-2 h-2 rounded-full bg-[#C5962B]"></span>
+            <span className="w-2 h-2 rounded-full bg-[#B89047]"></span>
             BLOCO 10 - PREFERÊNCIAS DE EMPREGO E ORIENTAÇÃO DE CARREIRA
           </h3>
           <p className="text-xs text-muted-foreground mt-0.5">
@@ -53,7 +53,7 @@ export function Bloco10Preferencias({
         </div>
 
         <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded bg-[#FFDEA3]/50 border border-[#F2BF51] text-[11px] font-bold text-[#745400]">
-          <Sparkles className="w-3.5 h-3.5 text-[#C5962B]" />
+          <Sparkles className="w-3.5 h-3.5 text-[#B89047]" />
           <span>Sugestões da IA com base nas competências F1-F16</span>
         </div>
       </div>

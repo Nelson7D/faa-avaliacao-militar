@@ -37,9 +37,9 @@ export default function MinhaFaiPage() {
       try {
         const allFais = await fetchFais();
         const myFai = profile?.nip
-          ? allFais.find((f) => f.militarNip === profile.nip) || allFais[0]
-          : allFais[0];
-        setFai(myFai || null);
+          ? allFais.find((f) => f.militarNip === profile.nip) || null
+          : null;
+        setFai(myFai);
       } catch (err) {
         console.error('Erro ao carregar FAI do militar:', err);
       } finally {
@@ -89,7 +89,7 @@ export default function MinhaFaiPage() {
         </div>
         <h2 className="text-base font-bold text-slate-900">Nenhuma FAI Ativa Encontrada</h2>
         <p className="text-xs text-slate-500 max-w-md mx-auto">
-          Não foi encontrada nenhuma Ficha de Avaliação Individual associada ao seu NIP ({profile?.nip}) para o ano de instrução corrente.
+          Não foi encontrada nenhuma Ficha de Avaliação Individual associada ao seu NIP ({profile?.nip || 'desconhecido'}) para o ciclo corrente.
         </p>
       </div>
     );
@@ -117,7 +117,7 @@ export default function MinhaFaiPage() {
         </div>
 
         <div className="flex items-center gap-2">
-          <Link href={`/militares/${profile?.nip || '40020792'}`}>
+          <Link href={`/militares/${profile?.nip || ''}`}>
             <Button variant="outline" size="sm" className="text-xs flex items-center gap-1.5">
               <FolderLock className="w-3.5 h-3.5" /> Meu Dossiê
             </Button>
@@ -133,9 +133,9 @@ export default function MinhaFaiPage() {
       )}
 
       {/* Main Classification Card */}
-      <div className="executive-card rounded-2xl p-6 shadow-card space-y-4">
-        <div className="flex flex-col md:flex-row justify-between items-center gap-6">
-          <div className="space-y-2 flex-1">
+      <div className="executive-card rounded-2xl p-4 sm:p-6 shadow-card space-y-4">
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 sm:gap-6">
+          <div className="space-y-2 flex-1 w-full">
             <div className="flex items-center gap-2">
               <span className="w-2.5 h-2.5 rounded-full bg-[#B89047]" />
               <h2 className="text-xs font-semibold text-slate-900 uppercase tracking-tight">
@@ -146,33 +146,50 @@ export default function MinhaFaiPage() {
               Processo FAI ID: <strong className="font-mono text-slate-800">{fai.id}</strong> • Etapa Atual:{' '}
               <span className="font-mono font-semibold text-primary">{fai.workflow?.etapaAtual || 'AVALIADOR_1'}</span>
             </p>
-            <div className="flex items-center gap-4 text-xs font-mono text-slate-600 pt-1">
+            <div className="flex flex-wrap items-center gap-3 sm:gap-4 text-xs font-mono text-slate-600 pt-1">
               <span>Divisor Aplicado: <strong className="text-slate-900">{fai.divisor || 52}</strong></span>
               <span>Modalidade: <strong className="text-slate-900">{fai.tipo || 'NORMAL'}</strong></span>
             </div>
           </div>
 
-          <div className="flex items-center gap-6 shrink-0">
-            <div className="text-center">
+          <div className="flex flex-wrap sm:flex-nowrap items-center gap-4 sm:gap-6 shrink-0 w-full md:w-auto pt-2 md:pt-0 border-t md:border-t-0 border-slate-100">
+            <div className="text-left sm:text-center">
               <span className="block text-[10px] uppercase text-slate-400 font-mono font-medium tracking-wider mb-0.5">
                 MÉDIA PONDERADA
               </span>
-              <div className="flex items-baseline justify-center gap-1.5">
-                <span className="font-data-mono text-4xl font-bold text-slate-900 tracking-tight">
+              <div className="flex items-baseline justify-start sm:justify-center gap-1.5">
+                <span className="font-data-mono text-3xl sm:text-4xl font-bold text-slate-900 tracking-tight">
                   {(fai.mediaPonderada || 0).toFixed(2)}
                 </span>
                 <span className="text-xs font-mono text-slate-400">/ 20.00</span>
               </div>
             </div>
 
-            <div className="h-12 w-px bg-slate-200 hidden sm:block" />
+            <div className="h-10 w-px bg-slate-200 hidden sm:block" />
 
             <div>
               <span className="block text-[10px] uppercase text-slate-400 font-mono font-medium tracking-wider mb-1.5">
                 QUALIFICAÇÃO OFICIAL
               </span>
-              <Badge variant="fav" className="text-xs px-3.5 py-1.5 shadow-2xs">
-                <ShieldCheck className="w-4 h-4 mr-1 text-[#B89047]" />
+              <Badge
+                variant={
+                  fai.classificacao === 'SIGNIFICATIVAMENTE FAVORÁVEL'
+                    ? 'sigFav'
+                    : fai.classificacao === 'FAVORÁVEL'
+                    ? 'fav'
+                    : 'desfav'
+                }
+                className="text-xs px-3.5 py-1.5 shadow-2xs"
+              >
+                <ShieldCheck
+                  className={`w-4 h-4 mr-1 ${
+                    fai.classificacao === 'SIGNIFICATIVAMENTE FAVORÁVEL'
+                      ? 'text-emerald-700'
+                      : fai.classificacao === 'FAVORÁVEL'
+                      ? 'text-[#B89047]'
+                      : 'text-rose-600'
+                  }`}
+                />
                 <span>{fai.classificacao || 'FAVORÁVEL'}</span>
               </Badge>
             </div>
@@ -236,12 +253,19 @@ export default function MinhaFaiPage() {
       </div>
 
       {/* BLOCO 11: TOMADA DE CONHECIMENTO FORMAL */}
-      <div className="executive-card rounded-2xl p-6 shadow-card space-y-4 border-2 border-slate-200/90">
+      <div className="executive-card rounded-2xl p-6 shadow-card space-y-4 border border-slate-200/80">
         <div className="flex items-center gap-2 pb-2 border-b border-slate-100">
           <PenTool className="w-4 h-4 text-[#B89047]" />
           <h3 className="text-sm font-bold text-slate-900">
             BLOCO 11 • O AVALIADO (TOMADA DE CONHECIMENTO FORMAL)
           </h3>
+        </div>
+
+        <div className="p-3 bg-amber-50/80 border border-amber-200 rounded-xl text-xs text-amber-900 flex items-start gap-2.5">
+          <Info className="w-4 h-4 text-[#B89047] shrink-0 mt-0.5" />
+          <p className="leading-relaxed">
+            <strong>Norma Regimental (Manual VII FAA):</strong> O parecer do militar avaliado é estritamente declaratório de ciência ou de fundamentação de recurso. <strong>Não altera nenhuma das notas ou médias atribuídas na FAI</strong>. Serve apenas para formalizar a concordância ou instruir o processo de impugnação.
+          </p>
         </div>
 
         {jaAssinou ? (

@@ -20,12 +20,9 @@ export function Bloco01Identificacao({
     <div className="p-6 border-b border-border bg-white">
       <div className="flex justify-between items-center mb-4">
         <h3 className="text-xs font-bold text-primary uppercase tracking-wider flex items-center gap-2">
-          <span className="w-2 h-2 rounded-full bg-[#C5962B]"></span>
+          <span className="w-2 h-2 rounded-full bg-[#B89047]"></span>
           BLOCO 01 - IDENTIFICAÇÃO DO MILITAR AVALIADO
         </h3>
-        <span className="text-[10px] font-mono text-muted-foreground uppercase">
-          MOD. FAA-RH-042/23
-        </span>
       </div>
 
       <div className="fai-border-grid rounded overflow-hidden text-xs">
@@ -60,7 +57,7 @@ export function Bloco01Identificacao({
                 <button
                   type="button"
                   onClick={() => militar.nip && onSearchNip(militar.nip)}
-                  className="p-1 bg-[#C5962B] text-white rounded hover:bg-[#9E751D] transition-colors"
+                  className="p-1 bg-[#B89047] text-white rounded hover:bg-[#A37E3A] transition-colors"
                   title="Pesquisar Militar no Sistema"
                 >
                   <Search className="w-3.5 h-3.5" />

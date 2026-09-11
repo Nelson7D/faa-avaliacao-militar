@@ -82,39 +82,54 @@ export default function MilitaresListPage() {
 
       {/* Grid of Military Personnel */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        {filtered.map((m) => (
-          <div
-            key={m.nip}
-            className="executive-card rounded-2xl p-5 flex flex-col justify-between shadow-card hover:shadow-card-hover transition-all space-y-4"
-          >
-            <div className="flex items-start gap-3.5">
-              <div className="w-12 h-12 rounded-xl bg-gradient-to-tr from-[#0F3323] to-[#1E523A] text-[#D4AF37] flex items-center justify-center font-bold text-xs font-mono shrink-0 overflow-hidden border border-primary/20 shadow-xs">
-                {m.fotoUrl ? (
-                  <img src={m.fotoUrl} alt={m.nomeCompleto} className="w-full h-full object-cover" />
-                ) : (
-                  <span>{m.posto.slice(0, 3).toUpperCase()}</span>
-                )}
-              </div>
-              <div className="min-w-0 flex-1">
-                <span className="text-[10px] font-mono font-bold text-slate-400 uppercase tracking-wider">
-                  {m.posto} • {m.categoria}
-                </span>
-                <h3 className="font-bold text-sm text-slate-900 truncate mt-0.5">{m.nomeCompleto}</h3>
-                <p className="text-xs text-slate-500 truncate mt-0.5">{m.unidade}</p>
-              </div>
-            </div>
+        {filtered.map((m) => {
+          const categoryColors =
+            m.categoria === 'OFICIAL'
+              ? 'bg-emerald-50 text-emerald-900 border-emerald-200'
+              : m.categoria === 'SARGENTO'
+              ? 'bg-blue-50 text-blue-900 border-blue-200'
+              : 'bg-amber-50 text-amber-900 border-amber-200';
 
-            <div className="pt-3 border-t border-slate-100 flex justify-between items-center text-xs">
-              <span className="font-mono text-slate-700 font-semibold">NIP {formatNip(m.nip)}</span>
-              <Link
-                href={`/militares/${m.nip}`}
-                className="inline-flex items-center gap-1 text-[#B89047] hover:text-[#947030] font-semibold transition-colors"
-              >
-                <Eye className="w-3.5 h-3.5" /> Abrir Dossiê
-              </Link>
+          return (
+            <div
+              key={m.nip}
+              className="executive-card rounded-2xl p-5 flex flex-col justify-between shadow-card hover:shadow-card-hover transition-all space-y-4"
+            >
+              <div className="flex items-start gap-3.5">
+                <div className="w-12 h-12 rounded-xl bg-gradient-to-tr from-[#0F3323] to-[#1E523A] text-[#D4AF37] flex items-center justify-center font-bold text-xs font-mono shrink-0 overflow-hidden border border-[#D4AF37]/30 shadow-xs">
+                  {m.fotoUrl ? (
+                    <img src={m.fotoUrl} alt={m.nomeCompleto} className="w-full h-full object-cover" />
+                  ) : (
+                    <span>{m.posto.slice(0, 3).toUpperCase()}</span>
+                  )}
+                </div>
+                <div className="min-w-0 flex-1">
+                  <div className="flex items-center gap-1.5 flex-wrap">
+                    <span className={`text-[9.5px] font-mono font-bold px-2 py-0.5 rounded-md border uppercase ${categoryColors}`}>
+                      {m.categoria}
+                    </span>
+                    <span className="text-[11px] font-mono text-slate-500 font-medium">
+                      {m.posto}
+                    </span>
+                  </div>
+                  <h3 className="font-bold text-sm text-slate-900 truncate mt-1">{m.nomeCompleto}</h3>
+                  <p className="text-xs text-slate-500 truncate mt-0.5">{m.unidade}</p>
+                </div>
+              </div>
+
+              <div className="pt-3 border-t border-slate-100 flex justify-between items-center text-xs">
+                <span className="font-mono text-slate-700 font-semibold">NIP {formatNip(m.nip)}</span>
+                <Link
+                  href={`/militares/${m.nip}`}
+                  className="inline-flex items-center gap-1 text-[#0F3323] hover:text-[#184A34] font-semibold transition-colors group"
+                >
+                  <Eye className="w-3.5 h-3.5 text-[#B89047] group-hover:scale-110 transition-transform" />
+                  <span>Abrir Dossiê</span>
+                </Link>
+              </div>
             </div>
-          </div>
-        ))}
+          );
+        })}
       </div>
     </div>
   );

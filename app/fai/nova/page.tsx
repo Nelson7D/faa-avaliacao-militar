@@ -1,10 +1,10 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
-import { ChevronLeft, Save, ArrowRight, CheckCircle2, UserCheck } from 'lucide-react';
-import { fetchMilitares, saveFaiDocument, fetchMilitarByNip } from '@/services/firebase/firestore';
+import { ChevronLeft, Save, ArrowRight, CheckCircle2, UserCheck, ShieldAlert, FileText, KeyRound } from 'lucide-react';
+import { fetchMilitares, saveFaiDocument, fetchMilitarByNip, registrarAuditLog, fetchAtribuicaoById, vincularFaiAtribuicao } from '@/services/firebase/firestore';
 import { Militar } from '@/types/militar';
 import { FaiDocument, FaiBloco03Grelha } from '@/types/fai';
 import { calcularMediaRegimental } from '@/lib/calculo-fai';
@@ -17,18 +17,22 @@ import { Blocos05a09Pareceres } from '@/components/fai/blocos-05-09-pareceres';
 import { Bloco10Preferencias } from '@/components/fai/bloco-10-preferencias';
 import { Bloco11Homologacao } from '@/components/fai/bloco-11-homologacao';
 import { Button } from '@/components/ui/button';
+import { useAuth } from '@/context/auth-context';
 
 export default function NovaFaiPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const { profile } = useAuth();
   const [militares, setMilitares] = useState<Militar[]>([]);
   const [selectedMilitar, setSelectedMilitar] = useState<Partial<Militar>>({
-    nip: '40020792',
-    nomeCompleto: 'António Mariano Pascoal',
-    posto: 'Major',
+    nip: '',
+    nomeCompleto: '',
+    nomeGuerra: '',
+    posto: 'Tenente',
     categoria: 'OFICIAL',
-    unidade: 'Quartel-General do Exército',
-    funcaoDesempenhada: 'Chefe de Secção de Planeamento',
-    asc: 'Transmissões e Informática',
+    unidade: '',
+    funcaoDesempenhada: '',
+    asc: '',
     qe: 'QP',
     feridoEmServico: false,
   });
@@ -38,6 +42,8 @@ export default function NovaFaiPage() {
   const [periodoInicio, setPeriodoInicio] = useState('2025-01-01');
   const [periodoFim, setPeriodoFim] = useState('2025-12-31');
   const [tipo, setTipo] = useState<'PERIODICA' | 'EXTRAORDINARIA'>('PERIODICA');
+  const [numeroAvaliadores, setNumeroAvaliadores] = useState<2 | 3>(3);
+  const [atribuicaoId, setAtribuicaoId] = useState<string | undefined>();
   const [observacoes, setObservacoes] = useState('');
 
   // Initial Grelha
@@ -51,16 +57,16 @@ export default function NovaFaiPage() {
 
   const [simularPraça, setSimularPraça] = useState(false);
   const [preferencias, setPreferencias] = useState<FaiDocument['preferenciasEmprego']>({
-    comando: { op1: true, sugestaoIa: true },
+    comando: { op1: true },
     estado_maior: { op2: true },
   });
 
   const [pareceres, setPareceres] = useState<FaiDocument['pareceres']>({
     avaliador1: {
-      texto: 'Militar com excelente preparação técnica e elevado sentido do dever.',
-      nip: '10048291',
-      nome: 'Ten-Cel. M. Pascoal',
-      posto: 'Tenente-Coronel',
+      texto: 'Militar cumpre com zelo e disciplina as missões e diretrizes atribuídas.',
+      nip: profile?.nip || '',
+      nome: profile ? `${profile.posto} ${profile.nomeGuerra || profile.nomeCompleto}` : '',
+      posto: profile?.posto || '',
       data: new Date().toISOString().split('T')[0],
       assinado: true,
     },
@@ -70,9 +76,40 @@ export default function NovaFaiPage() {
     async function load() {
       const data = await fetchMilitares();
       setMilitares(data);
+      
+      const atrIdParam = searchParams?.get('atribuicaoId');
+      const nipParam = searchParams?.get('nip');
+
+      if (atrIdParam) {
+        setAtribuicaoId(atrIdParam);
+        const atr = await fetchAtribuicaoById(atrIdParam);
+        if (atr) {
+          setNumeroAvaliadores(atr.numeroAvaliadores);
+          const mil = data.find((m) => m.nip === atr.militarAvaliadoNip);
+          if (mil) {
+            setSelectedMilitar(mil);
+            setSimularPraça(mil.categoria === 'PRACA');
+            return;
+          }
+        }
+      }
+
+      if (nipParam) {
+        const mil = data.find((m) => m.nip === nipParam);
+        if (mil) {
+          setSelectedMilitar(mil);
+          setSimularPraça(mil.categoria === 'PRACA');
+          return;
+        }
+      }
+
+      if (data.length > 0) {
+        setSelectedMilitar(data[0]);
+        setSimularPraça(data[0].categoria === 'PRACA');
+      }
     }
     load();
-  }, []);
+  }, [searchParams]);
 
   const handleSearchNip = async (nip: string) => {
     const found = await fetchMilitarByNip(nip);
@@ -87,26 +124,49 @@ export default function NovaFaiPage() {
   const resultadoCalculo = calcularMediaRegimental(
     categoriaEfetiva,
     grelha,
-    'efetivo',
-    Boolean(selectedMilitar.feridoEmServico)
+    {
+      avaliadorAtivo: 'efetivo',
+      feridoEmCombate: Boolean(selectedMilitar.feridoEmServico),
+      numeroAvaliadores,
+    }
   );
 
   const handleCreateFai = async () => {
-    const newId = `FAI-${Date.now().toString().slice(-4)}`;
+    if (!selectedMilitar.nip) {
+      alert('Selecione um militar cadastrado antes de submeter a FAI.');
+      return;
+    }
+
+    const ano = anoInstrucao.split('/')[0] || '2025';
+    const newId = `FAI-${ano}-${Date.now().toString().slice(-4)}`;
     const newDoc: FaiDocument = {
       id: newId,
-      militarNip: selectedMilitar.nip || '00000000',
+      militarNip: selectedMilitar.nip,
       militar: selectedMilitar as Militar,
       anoInstrucao,
       periodoInicio,
       periodoFim,
       tipo,
+      numeroAvaliadores,
+      ultimoAvaliador: numeroAvaliadores === 2 ? 'avaliador2' : 'cmdte',
+      mediaCalculadaPor: numeroAvaliadores === 2 ? 'avaliador2' : 'cmdte',
+      atribuicaoId,
       observacoesBloco02: observacoes,
       grelha,
       mediaPonderada: resultadoCalculo.MP,
       divisor: resultadoCalculo.divisor,
       classificacao: resultadoCalculo.classificacao,
-      pareceres,
+      pareceres: {
+        ...pareceres,
+        avaliador1: {
+          texto: pareceres?.avaliador1?.texto || 'Militar avaliado em conformidade regimental.',
+          nip: profile?.nip || '',
+          nome: profile ? `${profile.posto} ${profile.nomeGuerra || profile.nomeCompleto}` : '',
+          posto: profile?.posto || '',
+          data: new Date().toISOString().split('T')[0],
+          assinado: true,
+        },
+      },
       preferenciasEmprego: preferencias,
       workflow: {
         etapaAtual: 'AVALIADOR_1',
@@ -120,32 +180,51 @@ export default function NovaFaiPage() {
     };
 
     await saveFaiDocument(newDoc);
+    if (atribuicaoId) {
+      await vincularFaiAtribuicao(atribuicaoId, newId);
+    }
+
+    await registrarAuditLog({
+      operadorNip: profile?.nip || 'SISTEMA',
+      operadorNome: profile ? `${profile.posto} ${profile.nomeGuerra || profile.nomeCompleto}` : 'Sistema FAA',
+      operadorPosto: profile?.posto || 'Oficial',
+      acao: 'CRIACAO_FAI',
+      entidade: 'FAI',
+      entidadeId: newId,
+      detalhes: {
+        militarNip: selectedMilitar.nip,
+        categoria: categoriaEfetiva,
+        mediaInicial: resultadoCalculo.MP,
+        classificacaoInicial: resultadoCalculo.classificacao,
+      },
+    });
+
     router.push(`/fai/${newId}`);
   };
 
   return (
     <div className="space-y-6 pb-28">
       {/* Top Banner */}
-      <div className="flex justify-between items-center pb-2 border-b border-border">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 pb-4 border-b border-slate-200/80">
         <div className="flex items-center gap-3">
           <Link
             href="/dashboard"
-            className="p-1.5 border border-border rounded bg-white hover:bg-muted text-muted-foreground transition-colors"
+            className="p-2 border border-slate-200 rounded-xl bg-white hover:bg-slate-50 text-slate-600 transition-colors shadow-2xs"
           >
             <ChevronLeft className="w-4 h-4" />
           </Link>
           <div>
-            <h2 className="text-lg font-bold text-primary uppercase">Criar Nova FAI Digital</h2>
-            <p className="text-xs text-muted-foreground">
-              Abertura oficial do processo de avaliação individual (12 Blocos regimentais - Manual VII FAA)
+            <h2 className="text-lg font-bold text-slate-900 uppercase tracking-tight">Criar Nova FAI Digital</h2>
+            <p className="text-xs text-slate-500 mt-0.5">
+              Abertura oficial do processo de avaliação individual (Manual VII FAA • 12 Blocos Regimentais)
             </p>
           </div>
         </div>
 
         {/* Quick Militar Selector */}
         <div className="flex items-center gap-2">
-          <label className="text-xs font-bold text-muted-foreground uppercase hidden sm:block">
-            Preencher a partir de:
+          <label className="text-xs font-semibold text-slate-600 uppercase hidden sm:block">
+            Preencher Militar:
           </label>
           <select
             onChange={(e) => {
@@ -155,19 +234,19 @@ export default function NovaFaiPage() {
                 setSimularPraça(m.categoria === 'PRACA');
               }
             }}
-            className="py-1.5 px-3 text-xs border border-border rounded bg-white text-foreground focus:outline-none focus:ring-1 focus:ring-primary"
+            className="py-1.5 px-3 text-xs border border-slate-200 rounded-xl bg-white text-slate-900 focus:outline-none focus:ring-2 focus:ring-primary/20 shadow-2xs cursor-pointer font-medium"
           >
             <option value="">Selecione um Militar cadastrado...</option>
             {militares.map((mil) => (
               <option key={mil.nip} value={mil.nip}>
-                {mil.posto} {mil.nomeCompleto} (NIP {mil.nip})
+                {mil.posto} {mil.nomeCompleto} (NIP {mil.nip} - {mil.categoria})
               </option>
             ))}
           </select>
         </div>
       </div>
 
-      <div className="bg-white border border-border rounded shadow-xs overflow-hidden">
+      <div className="executive-card rounded-2xl shadow-card overflow-hidden">
         {/* Stepper Header */}
         <FaiHeaderStepper activeStep={activeStep} onStepClick={setActiveStep} />
 
@@ -203,6 +282,7 @@ export default function NovaFaiPage() {
               onGrelhaChange={setGrelha}
               perfilPraçaSimulado={simularPraça}
               onTogglePraçaSimulada={setSimularPraça}
+              numeroAvaliadores={numeroAvaliadores}
             />
             <Bloco04Classificacao resultado={resultadoCalculo} />
           </div>
@@ -211,7 +291,8 @@ export default function NovaFaiPage() {
         {/* Step 3: Pareceres */}
         {activeStep === 3 && (
           <Blocos05a09Pareceres
-            fai={{ grelha, militarNip: selectedMilitar.nip || '', pareceres } as any}
+            fai={{ grelha, militarNip: selectedMilitar.nip || '', pareceres, numeroAvaliadores } as any}
+            numeroAvaliadores={numeroAvaliadores}
             onPareceresChange={setPareceres}
           />
         )}
@@ -227,11 +308,11 @@ export default function NovaFaiPage() {
         {/* Step 5: Homologação */}
         {activeStep === 5 && (
           <div className="p-6 space-y-4">
-            <h3 className="text-sm font-bold text-primary uppercase">
-              Revisão e Criação da FAI
+            <h3 className="text-sm font-bold text-slate-900 uppercase">
+              Revisão e Abertura Oficial da FAI
             </h3>
-            <p className="text-xs text-muted-foreground">
-              A Ficha será criada e inserida no workflow na etapa do <strong>1º Avaliador</strong> (Prazo: 10 dias).
+            <p className="text-xs text-slate-500">
+              A Ficha de Avaliação Individual será criada com status inicial no <strong>1º Avaliador</strong> (Prazo Regimental: 10 dias).
             </p>
             <Bloco04Classificacao resultado={resultadoCalculo} />
           </div>
@@ -239,10 +320,10 @@ export default function NovaFaiPage() {
       </div>
 
       {/* Sticky Bottom Actions */}
-      <div className="fixed bottom-0 right-0 left-sidebar-width bg-white/95 backdrop-blur-md border-t border-border p-3 px-6 z-40 flex justify-between items-center shadow-md">
+      <div className="fixed bottom-0 right-0 left-64 bg-[#0B1612]/95 backdrop-blur-md border-t border-[#1B2F26] p-3.5 px-8 z-40 flex justify-between items-center no-print shadow-floating text-white">
         <div className="flex items-center gap-4 text-xs font-mono">
-          <span>Média Ponderada: <strong className="text-primary text-sm">{resultadoCalculo.MP.toFixed(2)}</strong></span>
-          <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-muted border border-border">
+          <span>Média Ponderada: <strong className="text-[#D4AF37] text-base font-bold ml-1">{resultadoCalculo.MP.toFixed(2)}</strong> (Divisor {resultadoCalculo.divisor})</span>
+          <span className="hidden md:inline-block px-2.5 py-0.5 rounded-full text-[10px] font-semibold font-mono bg-white/10 text-slate-200 border border-white/10 uppercase">
             {resultadoCalculo.classificacao}
           </span>
         </div>
@@ -253,7 +334,7 @@ export default function NovaFaiPage() {
               variant="default"
               size="sm"
               onClick={() => setActiveStep((prev) => Math.min(5, prev + 1))}
-              className="text-xs flex items-center gap-1.5"
+              className="text-xs flex items-center gap-1.5 bg-[#B89047] hover:bg-[#A37E3A] text-white cursor-pointer"
             >
               Próximo Bloco <ArrowRight className="w-3.5 h-3.5" />
             </Button>
@@ -262,7 +343,7 @@ export default function NovaFaiPage() {
               variant="gold"
               size="sm"
               onClick={handleCreateFai}
-              className="text-xs flex items-center gap-1.5"
+              className="text-xs flex items-center gap-1.5 shadow-xs cursor-pointer"
             >
               <CheckCircle2 className="w-3.5 h-3.5" /> Concluir e Iniciar Workflow
             </Button>
@@ -272,3 +353,4 @@ export default function NovaFaiPage() {
     </div>
   );
 }
+

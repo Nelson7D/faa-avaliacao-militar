@@ -9,14 +9,8 @@ import { ShieldCheck, CheckCircle2, Lock, ArrowRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Input } from '@/components/ui/input';
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-  DialogFooter,
-} from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { useAuth } from '@/context/auth-context';
 
 interface TramitarModalProps {
   fai: FaiDocument | null;
@@ -25,6 +19,7 @@ interface TramitarModalProps {
 }
 
 export function TramitarModal({ fai, onClose, onSuccess }: TramitarModalProps) {
+  const { profile } = useAuth();
   if (!fai) return null;
 
   const getProximaEtapa = (atual: EtapaWorkflow): EtapaWorkflow => {
@@ -48,9 +43,9 @@ export function TramitarModal({ fai, onClose, onSuccess }: TramitarModalProps) {
   const proximaEtapa = getProximaEtapa(etapaAtual);
   const configProxima = WORKFLOW_ETAPAS_CONFIG[proximaEtapa];
 
-  const [operadorNome, setOperadorNome] = useState('Tenente-Coronel M. Pascoal');
-  const [operadorNip, setOperadorNip] = useState('10048291');
-  const [operadorPosto, setOperadorPosto] = useState('Tenente-Coronel');
+  const [operadorNome, setOperadorNome] = useState(profile ? `${profile.posto} ${profile.nomeGuerra || profile.nomeCompleto}` : '');
+  const [operadorNip, setOperadorNip] = useState(profile?.nip || '');
+  const [operadorPosto, setOperadorPosto] = useState(profile?.posto || '');
   const [despacho, setDespacho] = useState('Processo analisado e validado em conformidade com o Regulamento de Avaliação.');
   const [pinAssinatura, setPinAssinatura] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);

@@ -8,10 +8,10 @@ import {
   signOut,
   onAuthStateChanged,
 } from 'firebase/auth';
-import { doc, getDoc, setDoc } from 'firebase/firestore';
+import { doc, getDoc, setDoc, collection, getDocs, query, where } from 'firebase/firestore';
 import { auth, db, isFirebaseConfigured } from '@/services/firebase/config';
 import { Militar } from '@/types/militar';
-import { fetchMilitarByNip, saveMilitarData } from '@/services/firebase/firestore';
+import { saveMilitarData, fetchMilitarByNip } from '@/services/firebase/firestore';
 
 export interface UserProfile {
   uid: string;
@@ -50,12 +50,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Check saved local profile
+    // 1. Tentar restaurar sessão persistida localmente (fallback caso Firebase Auth esteja pendente de ativação no Console)
     if (typeof window !== 'undefined') {
-      const savedProfile = localStorage.getItem('faa_active_profile');
-      if (savedProfile) {
+      const savedSession = localStorage.getItem('faa_user_session');
+      if (savedSession) {
         try {
-          setProfile(JSON.parse(savedProfile));
+          const parsed = JSON.parse(savedSession) as UserProfile;
+          setProfile(parsed);
         } catch {}
       }
     }
@@ -70,83 +71,130 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       if (firebaseUser) {
         try {
           if (db) {
-            const userDoc = await getDoc(doc(db, 'users', firebaseUser.uid));
+            let userDoc = await getDoc(doc(db, 'users', firebaseUser.uid));
             if (userDoc.exists()) {
               const data = userDoc.data() as UserProfile;
               setProfile(data);
-              localStorage.setItem('faa_active_profile', JSON.stringify(data));
+              if (typeof window !== 'undefined') {
+                localStorage.setItem('faa_user_session', JSON.stringify(data));
+              }
+            } else {
+              // Se não encontrou por UID, tenta por email
+              if (firebaseUser.email) {
+                const cleanNip = firebaseUser.email.replace('@faa.ao', '').trim();
+                userDoc = await getDoc(doc(db, 'users', cleanNip));
+                if (userDoc.exists()) {
+                  const data = userDoc.data() as UserProfile;
+                  setProfile(data);
+                  if (typeof window !== 'undefined') {
+                    localStorage.setItem('faa_user_session', JSON.stringify(data));
+                  }
+                }
+              }
             }
           }
         } catch (err) {
           console.warn('Erro ao carregar perfil do Firestore:', err);
         }
-      } else {
-        setProfile(null);
-        localStorage.removeItem('faa_active_profile');
       }
       setLoading(false);
     });
 
-    return () => unsubscribe();
+    const timeout = setTimeout(() => {
+      setLoading(false);
+    }, 1500);
+
+    return () => {
+      clearTimeout(timeout);
+      unsubscribe();
+    };
   }, []);
 
   const login = async (emailOrNip: string, pass: string) => {
-    let email = emailOrNip.trim();
-    let nipOrEmail = email;
+    const rawInput = emailOrNip.trim();
+    let email = rawInput;
+    let cleanNip = rawInput.replace('@faa.ao', '').trim();
     if (!email.includes('@')) {
-      email = `${email.toLowerCase()}@faa.ao`;
+      email = `${cleanNip.toLowerCase()}@faa.ao`;
     }
 
-    if (isFirebaseConfigured() && auth) {
+    if (!isFirebaseConfigured() || !db) {
+      throw new Error('O sistema de base de dados não está configurado. Contacte o administrador.');
+    }
+
+    // 1. Tentar autenticação via Firebase Auth
+    if (auth) {
       try {
         const cred = await signInWithEmailAndPassword(auth, email, pass);
         setUser(cred.user);
-        if (db) {
-          const userDoc = await getDoc(doc(db, 'users', cred.user.uid));
-          if (userDoc.exists()) {
-            const data = userDoc.data() as UserProfile;
-            setProfile(data);
-            localStorage.setItem('faa_active_profile', JSON.stringify(data));
-            return;
+
+        const userDoc = await getDoc(doc(db, 'users', cred.user.uid));
+        if (userDoc.exists()) {
+          const data = userDoc.data() as UserProfile;
+          setProfile(data);
+          if (typeof window !== 'undefined') {
+            localStorage.setItem('faa_user_session', JSON.stringify(data));
           }
+          return;
+        }
+
+        // Tenta por NIP
+        const nipDoc = await getDoc(doc(db, 'users', cleanNip));
+        if (nipDoc.exists()) {
+          const data = nipDoc.data() as UserProfile;
+          setProfile(data);
+          if (typeof window !== 'undefined') {
+            localStorage.setItem('faa_user_session', JSON.stringify(data));
+          }
+          return;
         }
       } catch (authErr: any) {
-        // Se Firebase Auth não tiver o provider de Email habilitado no console, busca no Firestore por NIP/Email
-        if (
-          authErr.code === 'auth/configuration-not-found' ||
-          authErr.code === 'auth/operation-not-allowed' ||
-          authErr.message?.includes('configuration-not-found')
-        ) {
-          if (db) {
-            const militares = await fetchMilitares();
-            const cleanIdentifier = nipOrEmail.replace('@faa.ao', '').trim();
-            const militarFound = militares.find(
-              (m) => m.nip === cleanIdentifier || m.contacto.includes(cleanIdentifier)
-            );
-            if (militarFound) {
-              const fallbackProfile: UserProfile = {
-                uid: militarFound.nip,
-                email: `${militarFound.nip}@faa.ao`,
-                nip: militarFound.nip,
-                nomeCompleto: militarFound.nomeCompleto,
-                nomeGuerra: militarFound.nomeGuerra,
-                posto: militarFound.posto,
-                unidade: militarFound.unidade,
-                funcaoDesempenhada: militarFound.funcaoDesempenhada,
-                categoria: militarFound.categoria,
-                role: militarFound.posto.includes('General') || militarFound.posto.includes('Coronel') ? 'DPQ' : 'AVALIADOR_1',
-              };
-              setProfile(fallbackProfile);
-              localStorage.setItem('faa_active_profile', JSON.stringify(fallbackProfile));
-              return;
-            }
-          }
+        const isPendingConfig =
+          authErr?.code === 'auth/configuration-not-found' ||
+          authErr?.code === 'auth/operation-not-allowed' ||
+          authErr?.message?.includes('configuration-not-found');
+
+        if (!isPendingConfig) {
+          throw authErr;
         }
-        throw authErr;
       }
-    } else {
-      throw new Error('Firebase Authentication não está configurado.');
     }
+
+    // 2. Fallback de verificação direta no Firestore
+    const userDoc = await getDoc(doc(db, 'users', cleanNip));
+    if (userDoc.exists()) {
+      const data = userDoc.data() as UserProfile;
+      setProfile(data);
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('faa_user_session', JSON.stringify(data));
+      }
+      return;
+    }
+
+    // Verificar se existe registo militar correspondente
+    const militarDoc = await fetchMilitarByNip(cleanNip);
+    if (militarDoc) {
+      const fallbackProfile: UserProfile = {
+        uid: militarDoc.nip,
+        email: `${militarDoc.nip}@faa.ao`,
+        nip: militarDoc.nip,
+        nomeCompleto: militarDoc.nomeCompleto,
+        nomeGuerra: militarDoc.nomeGuerra,
+        posto: militarDoc.posto,
+        unidade: militarDoc.unidade,
+        funcaoDesempenhada: militarDoc.funcaoDesempenhada,
+        categoria: militarDoc.categoria,
+        role: cleanNip === '00000001' ? 'ADMIN' : 'MILITAR_AVALIADO',
+      };
+      await setDoc(doc(db, 'users', cleanNip), fallbackProfile);
+      setProfile(fallbackProfile);
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('faa_user_session', JSON.stringify(fallbackProfile));
+      }
+      return;
+    }
+
+    throw new Error('NIP ou credenciais não encontradas no sistema das FAA.');
   };
 
   const registerMilitar = async (
@@ -155,37 +203,42 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     militarData: Partial<Militar>,
     role: UserProfile['role'] = 'MILITAR_AVALIADO'
   ) => {
-    const nip = militarData.nip || `${Math.floor(10000000 + Math.random() * 90000000)}`;
+    if (!isFirebaseConfigured() || !db) {
+      throw new Error('O sistema de base de dados não está configurado.');
+    }
+
+    const nip = militarData.nip;
+    if (!nip) {
+      throw new Error('O NIP é obrigatório para o cadastro militar.');
+    }
+
     const fullMilitar: Militar = {
       nip,
-      bi: militarData.bi || '000000000LA000',
-      nomeCompleto: militarData.nomeCompleto || 'Militar Registado',
-      nomeGuerra: militarData.nomeGuerra || (militarData.nomeCompleto?.split(' ')[0] || 'Militar'),
+      bi: militarData.bi || '',
+      nomeCompleto: militarData.nomeCompleto || '',
+      nomeGuerra: militarData.nomeGuerra || (militarData.nomeCompleto?.split(' ')[0] || ''),
       posto: militarData.posto || 'Soldado',
       categoria: militarData.categoria || 'PRACA',
-      subcategoria: militarData.categoria === 'OFICIAL' ? 'SUBALTERNO' : undefined,
-      unidade: militarData.unidade || 'Quartel-General do Exército',
-      orgao: militarData.orgao || 'Exército',
-      funcaoDesempenhada: militarData.funcaoDesempenhada || 'Efetivo Militar',
-      asc: militarData.asc || 'Infantaria',
-      qe: 'QP',
-      dataNascimento: '1995-01-01',
-      naturalidade: 'Luanda, Angola',
-      filiacao: 'Pai e Mãe',
-      dataIngresso: '2018-01-01',
-      tempoServicoAnos: 7,
-      feridoEmServico: false,
-      habilitacoesLiterarias: 'Ensino Médio',
-      estadoCivil: 'Solteiro',
-      idiomas: 'Português',
-      morada: 'Luanda',
-      contacto: '+244 900 000 000',
+      subcategoria: militarData.subcategoria,
+      unidade: militarData.unidade || '',
+      orgao: militarData.orgao || '',
+      funcaoDesempenhada: militarData.funcaoDesempenhada || '',
+      asc: militarData.asc || '',
+      qe: militarData.qe || 'QP',
+      dataNascimento: militarData.dataNascimento || '',
+      naturalidade: militarData.naturalidade || '',
+      filiacao: militarData.filiacao || '',
+      dataIngresso: militarData.dataIngresso || '',
+      tempoServicoAnos: militarData.tempoServicoAnos || 0,
+      feridoEmServico: militarData.feridoEmServico || false,
+      habilitacoesLiterarias: militarData.habilitacoesLiterarias || '',
+      estadoCivil: militarData.estadoCivil || '',
+      idiomas: militarData.idiomas || '',
+      morada: militarData.morada || '',
+      contacto: militarData.contacto || '',
       situacao: 'ACTIVO',
       ...militarData,
     };
-
-    // Salva o militar no Firestore
-    await saveMilitarData(fullMilitar);
 
     const newProfile: UserProfile = {
       uid: nip,
@@ -200,31 +253,25 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       role,
     };
 
-    if (isFirebaseConfigured() && auth) {
+    if (auth) {
       try {
         const cred = await createUserWithEmailAndPassword(auth, email, pass);
         newProfile.uid = cred.user.uid;
-        if (db) {
-          await setDoc(doc(db, 'users', cred.user.uid), newProfile);
-        }
+        setUser(cred.user);
+        await setDoc(doc(db, 'users', cred.user.uid), newProfile);
       } catch (authErr: any) {
-        if (
-          authErr.code === 'auth/configuration-not-found' ||
-          authErr.code === 'auth/operation-not-allowed' ||
-          authErr.message?.includes('configuration-not-found')
-        ) {
-          // Salva no Firestore sob users/{nip}
-          if (db) {
-            await setDoc(doc(db, 'users', nip), newProfile);
-          }
-        } else {
-          throw authErr;
-        }
+        console.warn('Firebase Auth create user note:', authErr?.message);
       }
     }
 
+    // Gravar perfil em users/{nip} e militares/{nip}
+    await setDoc(doc(db, 'users', nip), newProfile);
+    await saveMilitarData(fullMilitar);
+
     setProfile(newProfile);
-    localStorage.setItem('faa_active_profile', JSON.stringify(newProfile));
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('faa_user_session', JSON.stringify(newProfile));
+    }
   };
 
   const logout = async () => {
@@ -235,7 +282,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
     setUser(null);
     setProfile(null);
-    localStorage.removeItem('faa_active_profile');
+    if (typeof window !== 'undefined') {
+      localStorage.removeItem('faa_user_session');
+    }
   };
 
   return (

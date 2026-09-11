@@ -2,12 +2,7 @@ import { Militar } from '@/types/militar';
 import { FaiDocument, EtapaWorkflow } from '@/types/fai';
 import { ImpugnacaoDocument } from '@/types/impugnacao';
 import { AuditLogEntry, WORKFLOW_ETAPAS_CONFIG } from '@/types/workflow';
-import {
-  INITIAL_MILITARES,
-  INITIAL_FAIS,
-  INITIAL_IMPUGNACOES,
-  INITIAL_AUDIT_LOGS,
-} from './mock-data';
+import { AtribuicaoAvaliacao, ValidacaoCodigoResult, PapelAvaliador } from '@/types/avaliacao';
 import { db, isFirebaseConfigured } from './config';
 import {
   collection,
@@ -21,175 +16,27 @@ import {
   orderBy,
 } from 'firebase/firestore';
 
-// In-Memory & LocalStorage Store for seamless local operation
-class LocalDataStore {
-  private militares: Militar[] = [...INITIAL_MILITARES];
-  private fais: FaiDocument[] = [...INITIAL_FAIS];
-  private impugnacoes: ImpugnacaoDocument[] = [...INITIAL_IMPUGNACOES];
-  private auditLogs: AuditLogEntry[] = [...INITIAL_AUDIT_LOGS];
-
-  constructor() {
-    if (typeof window !== 'undefined') {
-      const savedMil = localStorage.getItem('faa_militares');
-      if (savedMil) {
-        try {
-          this.militares = JSON.parse(savedMil);
-        } catch {}
-      }
-      const savedFais = localStorage.getItem('faa_fais');
-      if (savedFais) {
-        try {
-          this.fais = JSON.parse(savedFais);
-        } catch {}
-      }
-      const savedImp = localStorage.getItem('faa_impugnacoes');
-      if (savedImp) {
-        try {
-          this.impugnacoes = JSON.parse(savedImp);
-        } catch {}
-      }
-      const savedLogs = localStorage.getItem('faa_audit_logs');
-      if (savedLogs) {
-        try {
-          this.auditLogs = JSON.parse(savedLogs);
-        } catch {}
-      }
-    }
-  }
-
-  private persist(key: string, data: unknown) {
-    if (typeof window !== 'undefined') {
-      try {
-        localStorage.setItem(key, JSON.stringify(data));
-      } catch {}
-    }
-  }
-
-  // Militares
-  getMilitares(): Militar[] {
-    return this.militares;
-  }
-  getMilitarByNip(nip: string): Militar | undefined {
-    return this.militares.find((m) => m.nip === nip);
-  }
-  saveMilitar(militar: Militar): Militar {
-    const idx = this.militares.findIndex((m) => m.nip === militar.nip);
-    if (idx >= 0) {
-      this.militares[idx] = militar;
-    } else {
-      this.militares.push(militar);
-    }
-    this.persist('faa_militares', this.militares);
-    return militar;
-  }
-
-  // FAIs
-  getFais(): FaiDocument[] {
-    return this.fais.map((fai) => ({
-      ...fai,
-      militar: this.getMilitarByNip(fai.militarNip),
-    }));
-  }
-  getFaiById(id: string): FaiDocument | undefined {
-    const fai = this.fais.find((f) => f.id === id);
-    if (!fai) return undefined;
-    return {
-      ...fai,
-      militar: this.getMilitarByNip(fai.militarNip),
-    };
-  }
-  getFaisByMilitar(nip: string): FaiDocument[] {
-    return this.getFais().filter((f) => f.militarNip === nip);
-  }
-  saveFai(fai: FaiDocument): FaiDocument {
-    const idx = this.fais.findIndex((f) => f.id === fai.id);
-    if (idx >= 0) {
-      this.fais[idx] = { ...fai, updatedAt: new Date().toISOString() };
-    } else {
-      this.fais.push({
-        ...fai,
-        createdAt: fai.createdAt || new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
-      });
-    }
-    this.persist('faa_fais', this.fais);
-    return fai;
-  }
-
-  // Impugnações
-  getImpugnacoes(): ImpugnacaoDocument[] {
-    return this.impugnacoes.map((imp) => ({
-      ...imp,
-      militar: this.getMilitarByNip(imp.militarNip),
-    }));
-  }
-  getImpugnacaoById(id: string): ImpugnacaoDocument | undefined {
-    const imp = this.impugnacoes.find((i) => i.id === id);
-    if (!imp) return undefined;
-    return {
-      ...imp,
-      militar: this.getMilitarByNip(imp.militarNip),
-    };
-  }
-  saveImpugnacao(impugnacao: ImpugnacaoDocument): ImpugnacaoDocument {
-    const idx = this.impugnacoes.findIndex((i) => i.id === impugnacao.id);
-    if (idx >= 0) {
-      this.impugnacoes[idx] = { ...impugnacao, updatedAt: new Date().toISOString() };
-    } else {
-      this.impugnacoes.push({
-        ...impugnacao,
-        createdAt: impugnacao.createdAt || new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
-      });
-    }
-    this.persist('faa_impugnacoes', this.impugnacoes);
-    return impugnacao;
-  }
-
-  // Audit Logs
-  getAuditLogs(): AuditLogEntry[] {
-    return this.auditLogs;
-  }
-  addAuditLog(entry: Omit<AuditLogEntry, 'id' | 'timestamp'>): AuditLogEntry {
-    const log: AuditLogEntry = {
-      ...entry,
-      id: `LOG-${Date.now()}-${Math.random().toString(36).substr(2, 5)}`,
-      timestamp: new Date().toISOString(),
-    };
-    this.auditLogs.unshift(log);
-    this.persist('faa_audit_logs', this.auditLogs);
-    return log;
-  }
-}
-
-export const localStore = new LocalDataStore();
-
 // ================= FIRESTORE SERVICE LAYER ================= //
 
-export async function seedFirestoreInitialData(): Promise<void> {
-  if (!isFirebaseConfigured() || !db) return;
-  try {
-    for (const m of INITIAL_MILITARES) {
-      await setDoc(doc(db, 'militares', m.nip), m);
-    }
-    for (const f of INITIAL_FAIS) {
-      await setDoc(doc(db, 'fais', f.id), f);
-    }
-    for (const imp of INITIAL_IMPUGNACOES) {
-      await setDoc(doc(db, 'impugnacoes', imp.id), imp);
-    }
-    for (const log of INITIAL_AUDIT_LOGS) {
-      await setDoc(doc(db, 'audit_logs', log.id), log);
-    }
-    console.info('✓ Dados iniciais de militares e FAIs sincronizados com sucesso no Cloud Firestore!');
-  } catch (err) {
-    console.warn('Erro ao popular Firestore inicial:', err);
+function sanitizeFirestoreData<T>(data: T): T {
+  if (data === undefined) return null as any;
+  if (data === null || typeof data !== 'object') return data;
+  if (data instanceof Date) return data;
+  if (Array.isArray(data)) {
+    return data.map(sanitizeFirestoreData) as any;
   }
+  const clean: any = {};
+  for (const [key, value] of Object.entries(data)) {
+    if (value !== undefined) {
+      clean[key] = sanitizeFirestoreData(value);
+    }
+  }
+  return clean;
 }
 
 export async function fetchMilitares(): Promise<Militar[]> {
   if (!isFirebaseConfigured() || !db) {
-    return localStore.getMilitares();
+    return [];
   }
   try {
     const col = collection(db, 'militares');
@@ -200,13 +47,13 @@ export async function fetchMilitares(): Promise<Militar[]> {
     return snap.docs.map((d) => d.data() as Militar);
   } catch (err) {
     console.warn('Firestore fetchMilitares error:', err);
-    return localStore.getMilitares();
+    return [];
   }
 }
 
 export async function fetchMilitarByNip(nip: string): Promise<Militar | undefined> {
   if (!isFirebaseConfigured() || !db) {
-    return localStore.getMilitarByNip(nip);
+    return undefined;
   }
   try {
     const docRef = doc(db, 'militares', nip);
@@ -214,14 +61,14 @@ export async function fetchMilitarByNip(nip: string): Promise<Militar | undefine
     if (snap.exists()) {
       return snap.data() as Militar;
     }
-    return localStore.getMilitarByNip(nip);
+    return undefined;
   } catch (err) {
-    return localStore.getMilitarByNip(nip);
+    console.warn('Firestore fetchMilitarByNip error:', err);
+    return undefined;
   }
 }
 
 export async function saveMilitarData(militar: Militar): Promise<Militar> {
-  localStore.saveMilitar(militar);
   if (isFirebaseConfigured() && db) {
     try {
       await setDoc(doc(db, 'militares', militar.nip), militar);
@@ -234,7 +81,7 @@ export async function saveMilitarData(militar: Militar): Promise<Militar> {
 
 export async function fetchFais(): Promise<FaiDocument[]> {
   if (!isFirebaseConfigured() || !db) {
-    return localStore.getFais();
+    return [];
   }
   try {
     const col = collection(db, 'fais');
@@ -257,13 +104,14 @@ export async function fetchFais(): Promise<FaiDocument[]> {
       militar: militares.find((m) => m.nip === f.militarNip),
     }));
   } catch (err) {
-    return localStore.getFais();
+    console.warn('Firestore fetchFais error:', err);
+    return [];
   }
 }
 
 export async function fetchFaiById(id: string): Promise<FaiDocument | undefined> {
   if (!isFirebaseConfigured() || !db) {
-    return localStore.getFaiById(id);
+    return undefined;
   }
   try {
     const docRef = doc(db, 'fais', id);
@@ -284,17 +132,17 @@ export async function fetchFaiById(id: string): Promise<FaiDocument | undefined>
         militar,
       };
     }
-    return localStore.getFaiById(id);
+    return undefined;
   } catch (err) {
-    return localStore.getFaiById(id);
+    console.warn('Firestore fetchFaiById error:', err);
+    return undefined;
   }
 }
 
 export async function saveFaiDocument(fai: FaiDocument): Promise<FaiDocument> {
-  localStore.saveFai(fai);
   if (isFirebaseConfigured() && db) {
     try {
-      await setDoc(doc(db, 'fais', fai.id), fai);
+      await setDoc(doc(db, 'fais', fai.id), sanitizeFirestoreData(fai));
     } catch (err) {
       console.warn('Firestore saveFaiDocument error:', err);
     }
@@ -355,13 +203,13 @@ export async function avancarWorkflowFai(
 
 export async function fetchImpugnacoes(): Promise<ImpugnacaoDocument[]> {
   if (!isFirebaseConfigured() || !db) {
-    return localStore.getImpugnacoes();
+    return [];
   }
   try {
     const col = collection(db, 'impugnacoes');
     const snap = await getDocs(col);
     if (snap.empty) {
-      return localStore.getImpugnacoes();
+      return [];
     }
     const imp = snap.docs.map((d) => d.data() as ImpugnacaoDocument);
     const militares = await fetchMilitares();
@@ -370,13 +218,14 @@ export async function fetchImpugnacoes(): Promise<ImpugnacaoDocument[]> {
       militar: militares.find((m) => m.nip === i.militarNip),
     }));
   } catch (err) {
-    return localStore.getImpugnacoes();
+    console.warn('Firestore fetchImpugnacoes error:', err);
+    return [];
   }
 }
 
 export async function fetchImpugnacaoById(id: string): Promise<ImpugnacaoDocument | undefined> {
   if (!isFirebaseConfigured() || !db) {
-    return localStore.getImpugnacaoById(id);
+    return undefined;
   }
   try {
     const docRef = doc(db, 'impugnacoes', id);
@@ -386,17 +235,17 @@ export async function fetchImpugnacaoById(id: string): Promise<ImpugnacaoDocumen
       const militar = await fetchMilitarByNip(imp.militarNip);
       return { ...imp, militar };
     }
-    return localStore.getImpugnacaoById(id);
+    return undefined;
   } catch (err) {
-    return localStore.getImpugnacaoById(id);
+    console.warn('Firestore fetchImpugnacaoById error:', err);
+    return undefined;
   }
 }
 
 export async function saveImpugnacaoDocument(impugnacao: ImpugnacaoDocument): Promise<ImpugnacaoDocument> {
-  localStore.saveImpugnacao(impugnacao);
   if (isFirebaseConfigured() && db) {
     try {
-      await setDoc(doc(db, 'impugnacoes', impugnacao.id), impugnacao);
+      await setDoc(doc(db, 'impugnacoes', impugnacao.id), sanitizeFirestoreData(impugnacao));
     } catch (err) {
       console.warn('Firestore saveImpugnacaoDocument error:', err);
     }
@@ -407,7 +256,11 @@ export async function saveImpugnacaoDocument(impugnacao: ImpugnacaoDocument): Pr
 export async function registrarAuditLog(
   log: Omit<AuditLogEntry, 'id' | 'timestamp'>
 ): Promise<AuditLogEntry> {
-  const created = localStore.addAuditLog(log);
+  const created: AuditLogEntry = {
+    ...log,
+    id: `LOG-${Date.now()}-${Math.random().toString(36).substr(2, 5)}`,
+    timestamp: new Date().toISOString(),
+  };
   if (isFirebaseConfigured() && db) {
     try {
       await setDoc(doc(db, 'audit_logs', created.id), created);
@@ -420,17 +273,18 @@ export async function registrarAuditLog(
 
 export async function fetchAuditLogs(): Promise<AuditLogEntry[]> {
   if (!isFirebaseConfigured() || !db) {
-    return localStore.getAuditLogs();
+    return [];
   }
   try {
     const col = collection(db, 'audit_logs');
     const snap = await getDocs(query(col, orderBy('timestamp', 'desc')));
     if (snap.empty) {
-      return localStore.getAuditLogs();
+      return [];
     }
     return snap.docs.map((d) => d.data() as AuditLogEntry);
   } catch (err) {
-    return localStore.getAuditLogs();
+    console.warn('Firestore fetchAuditLogs error:', err);
+    return [];
   }
 }
 
@@ -535,4 +389,215 @@ export async function assinarTomadaConhecimento(
 
   return updatedFai;
 }
+
+// ================= CONFIGURAÇÕES GERAIS DO SISTEMA ================= //
+
+export interface SystemConfigGeral {
+  anoInstrucao: string;
+  prazoFai: string;
+  prazoImpugnacao: string;
+  travarSubmissoes: boolean;
+}
+
+export async function fetchConfiguracoesGeral(): Promise<SystemConfigGeral> {
+  const defaultConfig: SystemConfigGeral = {
+    anoInstrucao: '2025/2026',
+    prazoFai: '30',
+    prazoImpugnacao: '15',
+    travarSubmissoes: false,
+  };
+
+  if (isFirebaseConfigured() && db) {
+    try {
+      const docRef = doc(db, 'configuracoes', 'geral');
+      const snap = await getDoc(docRef);
+      if (snap.exists()) {
+        return { ...defaultConfig, ...(snap.data() as Partial<SystemConfigGeral>) };
+      }
+    } catch (err) {
+      console.warn('Firestore fetchConfiguracoesGeral error:', err);
+    }
+  }
+
+  return defaultConfig;
+}
+
+export async function saveConfiguracoesGeral(config: SystemConfigGeral): Promise<void> {
+  if (isFirebaseConfigured() && db) {
+    try {
+      await setDoc(doc(db, 'configuracoes', 'geral'), config, { merge: true });
+    } catch (err) {
+      console.warn('Firestore saveConfiguracoesGeral error:', err);
+    }
+  }
+}
+
+// ================= ATRIBUIÇÕES E CÓDIGOS DE ACESSO INDIVIDUAIS (DPQ) ================= //
+
+function gerarCodigoRegimental(prefixo: string): string {
+  const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+  let rand = '';
+  for (let i = 0; i < 4; i++) {
+    rand += chars.charAt(Math.floor(Math.random() * chars.length));
+  }
+  return `FAA-${prefixo}-${rand}`;
+}
+
+export async function criarAtribuicaoAvaliacao(
+  dados: Omit<
+    AtribuicaoAvaliacao,
+    | 'id'
+    | 'codigoAcessoAvaliador1'
+    | 'codigoAcessoAvaliador2'
+    | 'codigoAcessoCmdte'
+    | 'statusAvaliador1'
+    | 'statusAvaliador2'
+    | 'statusCmdte'
+    | 'statusGeral'
+    | 'criadoEm'
+    | 'atualizadoEm'
+  >
+): Promise<AtribuicaoAvaliacao> {
+  const id = `ATR-${Date.now().toString().slice(-6)}-${Math.random().toString(36).substr(2, 4).toUpperCase()}`;
+  const codAval1 = gerarCodigoRegimental('AV1');
+  const codAval2 = dados.numeroAvaliadores >= 2 ? gerarCodigoRegimental('AV2') : undefined;
+  const codCmdte = dados.numeroAvaliadores === 3 ? gerarCodigoRegimental('CMD') : undefined;
+
+  const atribuicao: AtribuicaoAvaliacao = {
+    ...dados,
+    id,
+    codigoAcessoAvaliador1: codAval1,
+    statusAvaliador1: 'PENDENTE',
+    codigoAcessoAvaliador2: codAval2,
+    statusAvaliador2: dados.numeroAvaliadores >= 2 ? 'PENDENTE' : undefined,
+    codigoAcessoCmdte: codCmdte,
+    statusCmdte: dados.numeroAvaliadores === 3 ? 'PENDENTE' : undefined,
+    statusGeral: 'PENDENTE',
+    criadoEm: new Date().toISOString(),
+    atualizadoEm: new Date().toISOString(),
+  };
+
+  if (isFirebaseConfigured() && db) {
+    try {
+      await setDoc(doc(db, 'atribuicoes_avaliacao', id), sanitizeFirestoreData(atribuicao));
+    } catch (err) {
+      console.warn('Firestore criarAtribuicaoAvaliacao error:', err);
+    }
+  }
+
+  await registrarAuditLog({
+    operadorNip: dados.criadoPorNip,
+    operadorNome: dados.criadoPorNome,
+    acao: `Criação de Atribuição de Avaliação para Militar ${dados.militarAvaliadoNome} (NIP ${dados.militarAvaliadoNip}) com ${dados.numeroAvaliadores} avaliadores`,
+    entidade: 'SISTEMA',
+    entidadeId: id,
+    militarNip: dados.militarAvaliadoNip,
+    responsavel: dados.criadoPorNome,
+  });
+
+  return atribuicao;
+}
+
+export async function fetchAtribuicoes(): Promise<AtribuicaoAvaliacao[]> {
+  if (!isFirebaseConfigured() || !db) {
+    return [];
+  }
+  try {
+    const col = collection(db, 'atribuicoes_avaliacao');
+    const snap = await getDocs(col);
+    if (snap.empty) {
+      return [];
+    }
+    return snap.docs.map((d) => d.data() as AtribuicaoAvaliacao);
+  } catch (err) {
+    console.warn('Firestore fetchAtribuicoes error:', err);
+    return [];
+  }
+}
+
+export async function fetchAtribuicaoById(id: string): Promise<AtribuicaoAvaliacao | undefined> {
+  if (!isFirebaseConfigured() || !db) {
+    return undefined;
+  }
+  try {
+    const docRef = doc(db, 'atribuicoes_avaliacao', id);
+    const snap = await getDoc(docRef);
+    if (snap.exists()) {
+      return snap.data() as AtribuicaoAvaliacao;
+    }
+  } catch (err) {
+    console.warn('Firestore fetchAtribuicaoById error:', err);
+  }
+  return undefined;
+}
+
+export async function fetchAtribuicoesPorAvaliador(nip: string): Promise<AtribuicaoAvaliacao[]> {
+  const todas = await fetchAtribuicoes();
+  return todas.filter(
+    (a) =>
+      a.avaliador1Nip === nip ||
+      a.avaliador2Nip === nip ||
+      a.cmdteNip === nip
+  );
+}
+
+export async function validarCodigoAcessoAvaliacao(
+  codigo: string
+): Promise<ValidacaoCodigoResult> {
+  const cleanCode = (codigo || '').trim().toUpperCase();
+  if (!cleanCode) {
+    return { valido: false, mensagem: 'Introduza o código individual de avaliação.' };
+  }
+
+  const todas = await fetchAtribuicoes();
+  for (const atr of todas) {
+    if (atr.codigoAcessoAvaliador1 === cleanCode) {
+      return {
+        valido: true,
+        atribuicao: atr,
+        papel: 'avaliador1',
+        faiId: atr.faiId,
+      };
+    }
+    if (atr.codigoAcessoAvaliador2 === cleanCode) {
+      return {
+        valido: true,
+        atribuicao: atr,
+        papel: 'avaliador2',
+        faiId: atr.faiId,
+      };
+    }
+    if (atr.codigoAcessoCmdte === cleanCode) {
+      return {
+        valido: true,
+        atribuicao: atr,
+        papel: 'cmdte',
+        faiId: atr.faiId,
+      };
+    }
+  }
+
+  return {
+    valido: false,
+    mensagem: 'Código de acesso não encontrado ou inválido. Contacte o Chefe da DPQ/RH.',
+  };
+}
+
+export async function vincularFaiAtribuicao(
+  atribuicaoId: string,
+  faiId: string
+): Promise<void> {
+  if (isFirebaseConfigured() && db) {
+    try {
+      await setDoc(
+        doc(db, 'atribuicoes_avaliacao', atribuicaoId),
+        { faiId, statusGeral: 'EM_CURSO', atualizadoEm: new Date().toISOString() },
+        { merge: true }
+      );
+    } catch (err) {
+      console.warn('Firestore vincularFaiAtribuicao error:', err);
+    }
+  }
+}
+
 

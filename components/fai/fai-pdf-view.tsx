@@ -211,7 +211,7 @@ export function FaiPdfView({ fai }: { fai: FaiDocument }) {
         </div>
 
         {/* BLOCO 11 & BLOCO 12 */}
-        <div className="grid grid-cols-2 gap-3 text-[10px]">
+        <div className="grid grid-cols-2 gap-3 text-[10px] print-avoid-break">
           {/* Bloco 11: O Avaliado */}
           <div className="border border-black p-2 flex flex-col justify-between">
             <div>

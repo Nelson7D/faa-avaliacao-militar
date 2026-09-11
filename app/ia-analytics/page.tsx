@@ -265,10 +265,10 @@ export default function IaAnalyticsPage() {
                     />
                   </svg>
                   <div className="absolute inset-0 flex flex-col items-center justify-center">
-                    <span className="text-3xl font-black font-data-mono text-slate-900">
+                    <span className="text-3xl font-bold font-data-mono text-slate-900">
                       {probabilidade}%
                     </span>
-                    <span className="text-[10px] font-mono text-slate-500 font-semibold tracking-wider">
+                    <span className="text-[10px] font-mono text-slate-500 font-medium tracking-wider">
                       PROBABILIDADE
                     </span>
                   </div>
@@ -319,51 +319,56 @@ export default function IaAnalyticsPage() {
           </div>
 
           <div className="p-6 space-y-3.5 text-xs">
-            <p className="text-xs text-slate-500 leading-relaxed">
-              Auditoria algorítmica preventiva que detecta discrepâncias entre fatores correlacionados na FAI:
-            </p>
+            {/* Dynamic Incoherence Detection */}
+            {fais.length === 0 ? (
+              <div className="p-4 bg-slate-50 border border-slate-200 rounded-xl text-center space-y-1">
+                <ShieldCheck className="w-5 h-5 text-slate-400 mx-auto" />
+                <p className="text-slate-600 font-medium text-xs">Nenhum processo FAI registado</p>
+                <p className="text-[11px] text-slate-400">As auditorias automáticas serão executadas assim que forem abertas FAIs no ciclo.</p>
+              </div>
+            ) : (
+              <div className="space-y-3">
+                {fais.map((f) => {
+                  const notas = f.grelha || {};
+                  const f10 = notas['F10']?.cmdte ?? notas['F10']?.avaliador1 ?? 15;
+                  const f11 = notas['F11']?.cmdte ?? notas['F11']?.avaliador1 ?? 15;
+                  const hasDiscrepancy = f11 >= 20 && f10 <= 5;
 
-            {/* Alert 1 */}
-            <div className="p-4 bg-rose-50/60 border border-rose-200/90 rounded-xl space-y-1.5 shadow-2xs">
-              <div className="flex items-center gap-1.5 text-rose-700 font-semibold text-xs">
-                <AlertTriangle className="w-3.5 h-3.5" />
-                <span>Alerta Crítico • FAI-2025-004</span>
-              </div>
-              <p className="text-slate-800 text-xs leading-relaxed">
-                Militar obteve <strong className="text-slate-900">Nível 20 em F11 (Decisão em Crise)</strong> mas <strong className="text-rose-700">Nível 5 em F10 (Capacidade de Julgamento)</strong>.
-              </p>
-              <div className="text-[10.5px] text-rose-800 font-mono font-medium pt-1">
-                Recomendação: Revisão técnica obrigatória pelo 2º Avaliador.
-              </div>
-            </div>
+                  if (hasDiscrepancy) {
+                    return (
+                      <div key={f.id} className="p-4 bg-rose-50/60 border border-rose-200/90 rounded-xl space-y-1.5 shadow-2xs">
+                        <div className="flex items-center gap-1.5 text-rose-700 font-semibold text-xs">
+                          <AlertTriangle className="w-3.5 h-3.5" />
+                          <span>Alerta de Discrepância • {f.id}</span>
+                        </div>
+                        <p className="text-slate-800 text-xs leading-relaxed">
+                          Militar obteve <strong className="text-slate-900">Nível 20 em F11 (Decisão)</strong> mas <strong className="text-rose-700">Nível 5 em F10 (Julgamento)</strong>.
+                        </p>
+                        <div className="text-[10.5px] text-rose-800 font-mono font-medium pt-1">
+                          Recomendação: Revisão técnica recomendada pelo 2º Avaliador / Conselho.
+                        </div>
+                      </div>
+                    );
+                  }
 
-            {/* Alert 2 */}
-            <div className="p-4 bg-amber-50/60 border border-amber-200/90 rounded-xl space-y-1.5 shadow-2xs">
-              <div className="flex items-center gap-1.5 text-amber-800 font-semibold text-xs">
-                <AlertTriangle className="w-3.5 h-3.5 text-[#B89047]" />
-                <span>Alerta de Discrepância • FAI-2025-005</span>
+                  return (
+                    <div key={f.id} className="p-4 bg-emerald-50/60 border border-emerald-200/90 rounded-xl space-y-1.5 shadow-2xs">
+                      <div className="flex items-center gap-1.5 text-emerald-800 font-semibold text-xs">
+                        <ShieldCheck className="w-3.5 h-3.5 text-emerald-700" />
+                        <span>Conformidade Regimental • {f.id}</span>
+                      </div>
+                      <p className="text-slate-800 text-xs leading-relaxed">
+                        Média Ponderada: <strong className="font-mono">{f.mediaPonderada?.toFixed(2) || '0.00'}</strong> pts • {f.classificacao}
+                      </p>
+                    </div>
+                  );
+                })}
               </div>
-              <p className="text-slate-800 text-xs leading-relaxed">
-                Fator F12 (Condição Física) atribuído em nível 5 para militar sem registo de baixa ou incapacidade médica.
-              </p>
-              <div className="text-[10.5px] text-amber-900 font-mono font-medium pt-1">
-                Recomendação: Anexar ata médica ou teste TAF atualizado.
-              </div>
-            </div>
-
-            {/* Alert 3 */}
-            <div className="p-4 bg-emerald-50/60 border border-emerald-200/90 rounded-xl space-y-1.5 shadow-2xs">
-              <div className="flex items-center gap-1.5 text-emerald-800 font-semibold text-xs">
-                <ShieldCheck className="w-3.5 h-3.5 text-emerald-700" />
-                <span>Conformidade Plena • FAI-2025-001</span>
-              </div>
-              <p className="text-slate-800 text-xs leading-relaxed">
-                Correlação linear perfeita entre capacidade técnica (F1=20) e cumprimento de missões operacionais (F3=20).
-              </p>
-            </div>
+            )}
           </div>
         </div>
       </div>
     </div>
   );
 }
+

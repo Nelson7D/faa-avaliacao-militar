@@ -16,9 +16,11 @@ import {
   ChevronRight,
   ShieldCheck,
   Award,
+  X,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/context/auth-context';
+import { ManualAjudaModal } from '@/components/fai/manual-ajuda-modal';
 
 export interface NavItemDef {
   label: string;
@@ -66,7 +68,7 @@ export const NAV_ITEMS: NavItemDef[] = [
   {
     label: 'Meu Dossiê',
     sublabel: 'Folha de Matrícula',
-    href: '/militares/40020792',
+    href: '/militares',
     icon: FolderLock,
     roles: ['MILITAR_AVALIADO'],
   },
@@ -77,7 +79,7 @@ export const NAV_ITEMS: NavItemDef[] = [
     icon: Scale,
   },
   {
-    label: 'IA Analysis',
+    label: 'Análise IA',
     sublabel: 'Pareceres & Predição',
     href: '/ia-analytics',
     icon: Brain,
@@ -92,10 +94,16 @@ export const NAV_ITEMS: NavItemDef[] = [
   },
 ];
 
-export function Sidebar() {
+interface SidebarProps {
+  mobileOpen?: boolean;
+  onMobileClose?: () => void;
+}
+
+export function Sidebar({ mobileOpen = false, onMobileClose }: SidebarProps) {
   const pathname = usePathname();
   const router = useRouter();
   const { profile, logout } = useAuth();
+  const [showHelpModal, setShowHelpModal] = React.useState(false);
 
   const handleLogout = async () => {
     await logout();
@@ -125,26 +133,50 @@ export function Sidebar() {
   };
 
   return (
-    <aside className="w-sidebar-width h-screen fixed left-0 top-0 bg-[#0B1612] text-slate-200 border-r border-[#1B2F26] flex flex-col py-5 px-3.5 z-50 select-none shadow-2xl">
-      {/* Brand Header */}
-      <div className="px-2 mb-6 flex items-center gap-3">
-        <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#C89D46] to-[#8C6B26] p-0.5 shadow-md flex items-center justify-center">
-          <div className="w-full h-full bg-[#0B1612] rounded-[10px] flex items-center justify-center">
-            <Shield className="w-5 h-5 text-[#D4AF37]" />
+    <>
+      {/* Mobile Backdrop */}
+      {mobileOpen && (
+        <div
+          onClick={onMobileClose}
+          className="fixed inset-0 bg-black/60 backdrop-blur-xs z-40 md:hidden animate-in fade-in transition-opacity"
+          aria-hidden="true"
+        />
+      )}
+      <aside
+        className={cn(
+          "w-sidebar-width h-screen fixed left-0 top-0 bg-[#0B1612] text-slate-200 border-r border-[#1B2F26] flex flex-col py-5 px-3.5 z-50 select-none shadow-2xl transition-transform duration-300 ease-in-out md:translate-x-0",
+          mobileOpen ? "translate-x-0" : "-translate-x-full"
+        )}
+      >
+        {/* Brand Header */}
+        <div className="px-2 mb-6 flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#C89D46] to-[#8C6B26] p-0.5 shadow-md flex items-center justify-center">
+              <div className="w-full h-full bg-[#0B1612] rounded-[10px] flex items-center justify-center">
+                <Shield className="w-5 h-5 text-[#D4AF37]" />
+              </div>
+            </div>
+            <div>
+              <div className="flex items-center gap-1.5">
+                <h1 className="font-bold text-sm tracking-wide text-white font-sans">SISTEMA FAA</h1>
+              </div>
+              <p className="text-[10px] text-slate-400 font-medium tracking-wider uppercase mt-0.5">
+                Comando de Pessoal
+              </p>
+            </div>
           </div>
+
+          {onMobileClose && (
+            <button
+              type="button"
+              onClick={onMobileClose}
+              className="md:hidden p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-white/10 transition-colors"
+              aria-label="Fechar menu"
+            >
+              <X className="w-5 h-5" />
+            </button>
+          )}
         </div>
-        <div>
-          <div className="flex items-center gap-1.5">
-            <h1 className="font-bold text-sm tracking-wide text-white font-sans">SISTEMA FAA</h1>
-            <span className="px-1.5 py-0.2 text-[9px] font-mono font-bold bg-[#D4AF37]/15 text-[#D4AF37] rounded border border-[#D4AF37]/30">
-              v2.5
-            </span>
-          </div>
-          <p className="text-[10px] text-slate-400 font-medium tracking-wider uppercase mt-0.5">
-            Comando de Pessoal
-          </p>
-        </div>
-      </div>
 
       <div className="px-2 mb-2 text-[10px] font-semibold uppercase tracking-wider text-slate-400/90 font-mono">
         Menu Operacional
@@ -154,15 +186,18 @@ export function Sidebar() {
       <nav className="flex-1 space-y-1 overflow-y-auto px-0.5">
         {visibleNavItems.map((item) => {
           const Icon = item.icon;
+          const cleanCurrent = (pathname || '').replace(/\/$/, '') || '/';
+          const cleanTarget = item.href.replace(/\/$/, '') || '/';
           const isActive =
-            pathname === item.href ||
-            (item.href === '/fai/nova' && pathname.startsWith('/fai/')) ||
-            (item.href.startsWith('/militares') && pathname.startsWith('/militares/'));
+            cleanCurrent === cleanTarget ||
+            (item.href === '/fai/nova' && cleanCurrent.startsWith('/fai')) ||
+            (item.href.startsWith('/militares') && cleanCurrent.startsWith('/militares'));
 
           return (
             <Link
               key={item.href}
               href={item.href}
+              onClick={onMobileClose}
               className={cn(
                 'group relative flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-150 text-xs font-medium',
                 isActive
@@ -171,7 +206,7 @@ export function Sidebar() {
               )}
             >
               {isActive && (
-                <div className="absolute left-0 top-1.5 bottom-1.5 w-1 bg-[#D4AF37] rounded-r-full shadow-glow-gold" />
+                <div className="absolute left-0 top-1.5 bottom-1.5 w-1 bg-[#B89047] rounded-r-full" />
               )}
               <Icon
                 className={cn(
@@ -210,12 +245,13 @@ export function Sidebar() {
         </div>
 
         <div className="flex justify-between items-center text-slate-400 text-[11px] px-1 pt-1">
-          <Link
-            href="/dashboard"
+          <button
+            type="button"
+            onClick={() => setShowHelpModal(true)}
             className="flex items-center gap-1.5 hover:text-slate-200 cursor-pointer transition-colors"
           >
             <HelpCircle className="w-3.5 h-3.5" /> Manual FAI
-          </Link>
+          </button>
           <button
             type="button"
             onClick={handleLogout}
@@ -225,6 +261,9 @@ export function Sidebar() {
           </button>
         </div>
       </div>
+
+      <ManualAjudaModal open={showHelpModal} onOpenChange={setShowHelpModal} />
     </aside>
+    </>
   );
 }

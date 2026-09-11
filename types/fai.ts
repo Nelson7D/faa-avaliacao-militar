@@ -106,6 +106,10 @@ export interface FaiDocument {
   periodoInicio: string;
   periodoFim: string;
   tipo: 'PERIODICA' | 'EXTRAORDINARIA';
+  numeroAvaliadores?: 2 | 3;
+  ultimoAvaliador?: 'avaliador2' | 'cmdte';
+  mediaCalculadaPor?: 'avaliador1' | 'avaliador2' | 'cmdte';
+  atribuicaoId?: string;
   observacoesBloco02?: string;
   grelha: FaiBloco03Grelha;
   mediaPonderada: number;

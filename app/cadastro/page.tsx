@@ -48,9 +48,9 @@ export default function CadastroPage() {
           posto,
           categoria,
           unidade,
-          funcaoDesempenhada: 'Oficial de Operações',
+          funcaoDesempenhada: 'Efetivo Militar',
         },
-        posto.includes('Coronel') || posto.includes('General') ? 'DPQ' : 'AVALIADOR_1'
+        'MILITAR_AVALIADO'
       );
       setSuccess(true);
       setTimeout(() => {

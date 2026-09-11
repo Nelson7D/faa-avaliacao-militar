@@ -2,17 +2,19 @@
 
 import React, { useState, useEffect } from 'react';
 import {
-  Bell,
   Clock,
   Radio,
-  ChevronDown,
-  Activity,
-  User,
+  Shield,
+  Menu,
 } from 'lucide-react';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
-import { useAuth } from '@/context/auth-context';
+import { useAuth, UserProfile } from '@/context/auth-context';
 
-export function TopNavbar() {
+interface TopNavbarProps {
+  onOpenMobileMenu?: () => void;
+}
+
+export function TopNavbar({ onOpenMobileMenu }: TopNavbarProps) {
   const [timeString, setTimeString] = useState('');
   const { profile } = useAuth();
 
@@ -40,69 +42,76 @@ export function TopNavbar() {
     return name.slice(0, 2).toUpperCase();
   };
 
+  const getRoleBadge = (role: UserProfile['role']) => {
+    switch (role) {
+      case 'ADMIN':
+        return { label: 'ADMIN', color: 'bg-purple-50 text-purple-800 border-purple-200' };
+      case 'DPQ':
+        return { label: 'DPQ / HOMOLOGAÇÃO', color: 'bg-emerald-50 text-emerald-800 border-emerald-200' };
+      case 'CMDTE':
+        return { label: 'COMANDANTE U/E/O', color: 'bg-amber-50 text-amber-900 border-amber-300' };
+      case 'AVALIADOR_1':
+        return { label: '1º AVALIADOR', color: 'bg-blue-50 text-blue-800 border-blue-200' };
+      case 'AVALIADOR_2':
+        return { label: '2º AVALIADOR', color: 'bg-cyan-50 text-cyan-800 border-cyan-200' };
+      case 'MILITAR_AVALIADO':
+        return { label: 'MILITAR AVALIADO', color: 'bg-slate-100 text-slate-700 border-slate-200' };
+      default:
+        return { label: role, color: 'bg-slate-100 text-slate-700 border-slate-200' };
+    }
+  };
+
+  const activeRoleBadge = profile ? getRoleBadge(profile.role) : null;
+
   return (
-    <header className="h-16 bg-white/90 backdrop-blur-md border-b border-slate-200/80 sticky top-0 z-30 px-6 sm:px-8 flex items-center justify-between shadow-subtle">
-      {/* Left: System Identification & Operational Status */}
-      <div className="flex items-center gap-4">
-        <div className="flex items-center gap-2 px-2.5 py-1 rounded-full bg-slate-100/80 border border-slate-200/60">
-          <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse shadow-[0_0_8px_rgba(16,185,129,0.5)]" />
-          <span className="text-[11px] font-semibold text-slate-700 tracking-wide">
-            SISTEMA OPERACIONAL DAS FAA
-          </span>
-        </div>
-
-        <div className="h-4 w-px bg-slate-200 hidden md:block" />
-
-        {/* Luanda Military Clock */}
-        <div className="hidden sm:flex items-center gap-2 text-xs font-mono text-slate-600 bg-slate-50 px-3 py-1 rounded-lg border border-slate-200/80 shadow-2xs">
+    <header className="h-16 bg-white border-b border-slate-200/80 sticky top-0 z-30 px-6 sm:px-8 flex items-center justify-between">
+      {/* Left: Hamburger (Mobile) & Clock */}
+      <div className="flex items-center gap-3">
+        {onOpenMobileMenu && (
+          <button
+            type="button"
+            onClick={onOpenMobileMenu}
+            className="md:hidden p-2 rounded-xl text-slate-600 hover:text-slate-900 hover:bg-slate-100 border border-slate-200 transition-colors cursor-pointer"
+            aria-label="Abrir menu de navegação"
+          >
+            <Menu className="w-4 h-4" />
+          </button>
+        )}
+        <div className="flex items-center gap-2 text-xs font-mono text-slate-600 bg-slate-100/70 px-3 py-1.5 rounded-lg border border-slate-200/70">
           <Clock className="w-3.5 h-3.5 text-[#B89047]" />
-          <span className="font-semibold text-slate-900 tracking-tight">{timeString || '19:30:00'}</span>
+          <span className="font-semibold text-slate-900 tracking-tight">{timeString || '12:00:00'}</span>
           <span className="text-[10px] text-slate-500 uppercase font-sans font-medium">WAT (Luanda)</span>
         </div>
       </div>
 
-      {/* Right: Readiness, Notifications & User Profile */}
+      {/* Right: Officer Profile */}
       <div className="flex items-center gap-3">
-        {/* Tactical Readiness Badge */}
-        <TooltipProvider>
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <div className="hidden md:flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-50/80 border border-emerald-200 text-emerald-800 text-xs font-medium cursor-pointer hover:bg-emerald-100/80 transition-colors shadow-2xs">
-                <Radio className="w-3 h-3 text-emerald-600 animate-pulse" />
-                <span className="font-semibold text-[11px]">Prontidão 100%</span>
-              </div>
-            </TooltipTrigger>
-            <TooltipContent className="bg-slate-900 text-white border-slate-800 text-xs py-1.5 px-3 rounded-lg shadow-lg">
-              <span>Cálculo regimental, auditoria e base de dados sincronizados</span>
-            </TooltipContent>
-          </Tooltip>
-        </TooltipProvider>
-
-        {/* Notifications Icon with Badge */}
-        <button
-          className="relative p-2 rounded-lg hover:bg-slate-100 text-slate-500 hover:text-slate-900 transition-colors"
-          title="Notificações e Prazos"
-        >
-          <Bell className="w-4 h-4" />
-          <span className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-[#B89047] ring-2 ring-white" />
-        </button>
-
-        <div className="h-5 w-px bg-slate-200" />
 
         {/* Officer Profile Badge */}
-        <div className="flex items-center gap-3 pl-1 select-none">
-          <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-[#0F3323] to-[#1E523A] text-[#D4AF37] flex items-center justify-center font-bold text-xs font-mono border border-primary/20 shadow-xs">
-            {profile ? getInitials(profile.nomeCompleto) : 'MP'}
-          </div>
-          <div className="hidden lg:block text-left">
-            <div className="text-xs font-semibold text-slate-800 leading-tight">
-              {profile ? `${profile.posto} ${profile.nomeGuerra}` : 'Ten-Cel. M. Pascoal'}
+        {profile ? (
+          <div className="flex items-center gap-2.5 pl-1 select-none">
+            <div className="w-9 h-9 rounded-full bg-gradient-to-tr from-[#0F3323] to-[#1E523A] text-[#D4AF37] flex items-center justify-center font-bold text-xs font-mono border border-primary/20 shadow-xs">
+              {getInitials(profile.nomeCompleto)}
             </div>
-            <div className="text-[10px] text-slate-500 leading-tight font-mono mt-0.5">
-              NIP {profile ? profile.nip : '10048291'} • {profile ? profile.role : 'DPQ'}
+            <div className="hidden xl:block text-left">
+              <div className="text-xs font-semibold text-slate-800 leading-tight">
+                {profile.posto} {profile.nomeGuerra}
+              </div>
+              <div className="text-[10px] text-slate-500 leading-tight font-mono mt-0.5">
+                NIP {profile.nip} • {profile.role}
+              </div>
             </div>
           </div>
-        </div>
+        ) : (
+          <div className="flex items-center gap-2 pl-1 select-none">
+            <div className="w-9 h-9 rounded-full bg-slate-200 flex items-center justify-center text-xs font-mono text-slate-500">
+              --
+            </div>
+            <div className="hidden xl:block text-left">
+              <div className="text-xs text-slate-500">Não autenticado</div>
+            </div>
+          </div>
+        )}
       </div>
     </header>
   );

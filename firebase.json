@@ -2,5 +2,53 @@
   "firestore": {
     "rules": "firestore.rules",
     "indexes": "firestore.indexes.json"
+  },
+  "hosting": {
+    "site": "faa-avaliacao-militar",
+    "public": "out",
+    "trailingSlash": true,
+    "headers": [
+      {
+        "source": "**/*.html",
+        "headers": [
+          {
+            "key": "Cache-Control",
+            "value": "no-cache, no-store, must-revalidate"
+          }
+        ]
+      },
+      {
+        "source": "**/",
+        "headers": [
+          {
+            "key": "Cache-Control",
+            "value": "no-cache, no-store, must-revalidate"
+          }
+        ]
+      }
+    ],
+    "rewrites": [
+      {
+        "source": "/fai/nova/**",
+        "destination": "/fai/nova/index.html"
+      },
+      {
+        "source": "/fai/**",
+        "destination": "/fai/detalhes/index.html"
+      },
+      {
+        "source": "/militares/dossie/**",
+        "destination": "/militares/dossie/index.html"
+      },
+      {
+        "source": "/militares/**",
+        "destination": "/militares/dossie/index.html"
+      }
+    ],
+    "ignore": [
+      "firebase.json",
+      "**/.*",
+      "**/node_modules/**"
+    ]
   }
 }

@@ -51,16 +51,39 @@ export interface ResultadoCalculoFai {
   incoerenciasDetectadas?: string[];
 }
 
+export interface OpcoesCalculoRegimental {
+  avaliadorAtivo?: 'avaliador1' | 'avaliador2' | 'cmdte' | 'efetivo';
+  feridoEmCombate?: boolean;
+  numeroAvaliadores?: 2 | 3;
+}
+
 /**
  * Calcula a Média Ponderada (MP) e a Classificação Regimental Oficial das FAA
  * em estrita conformidade com o Manual de Preparação Especial VII (Academia Militar, 2021).
+ *
+ * REGRA REGIMENTAL DE HOMOLOGAÇÃO:
+ * - Se o processo tem 2 Avaliadores: O 2º Avaliador é o ÚLTIMO avaliador e é quem determina a média final.
+ * - Se o processo tem 3 Avaliadores: O Comandante é o ÚLTIMO avaliador e é quem determina a média final.
+ * - O parecer do militar avaliado não altera qualquer nota nem o cálculo da MP.
  */
 export function calcularMediaRegimental(
   categoria: CategoriaMilitar,
   grelha: FaiBloco03Grelha,
-  avaliadorAtivo: 'avaliador1' | 'avaliador2' | 'cmdte' | 'efetivo' = 'efetivo',
+  avaliadorAtivoOrOptions: 'avaliador1' | 'avaliador2' | 'cmdte' | 'efetivo' | OpcoesCalculoRegimental = 'efetivo',
   feridoEmCombate: boolean = false
 ): ResultadoCalculoFai {
+  let avaliadorAtivo: 'avaliador1' | 'avaliador2' | 'cmdte' | 'efetivo' = 'efetivo';
+  let isFerido = feridoEmCombate;
+  let numAvaliadores: 2 | 3 = 3;
+
+  if (typeof avaliadorAtivoOrOptions === 'object') {
+    avaliadorAtivo = avaliadorAtivoOrOptions.avaliadorAtivo || 'efetivo';
+    isFerido = Boolean(avaliadorAtivoOrOptions.feridoEmCombate);
+    numAvaliadores = avaliadorAtivoOrOptions.numeroAvaliadores || 3;
+  } else {
+    avaliadorAtivo = avaliadorAtivoOrOptions;
+  }
+
   const isPraca = categoria === 'PRACA';
   const divisor: 52 | 31 = isPraca ? 31 : 52;
 
@@ -74,15 +97,28 @@ export function calcularMediaRegimental(
     }
 
     let nota: NivelFator = 5;
-    if (avaliadorAtivo === 'efetivo') {
-      // Prioridade: Comandante > 2º Avaliador > 1º Avaliador
-      nota = grelha[fId]?.cmdte ?? grelha[fId]?.avaliador2 ?? grelha[fId]?.avaliador1 ?? 5;
-    } else if (avaliadorAtivo === 'cmdte') {
-      nota = grelha[fId]?.cmdte ?? grelha[fId]?.avaliador2 ?? grelha[fId]?.avaliador1 ?? 5;
-    } else if (avaliadorAtivo === 'avaliador2') {
-      nota = grelha[fId]?.avaliador2 ?? grelha[fId]?.avaliador1 ?? 5;
+
+    if (numAvaliadores === 2) {
+      // PROCESSO COM 2 AVALIADORES:
+      // O 2º Avaliador é o último e quem determina a média.
+      // Se estamos a ver pelo 1º avaliador: vê apenas notas do 1º
+      // Se estamos em efetivo ou 2º avaliador: a nota consolidada é a do 2º avaliador (ou 1º se concordou)
+      if (avaliadorAtivo === 'avaliador1') {
+        nota = grelha[fId]?.avaliador1 ?? 5;
+      } else {
+        nota = grelha[fId]?.avaliador2 ?? grelha[fId]?.avaliador1 ?? 5;
+      }
     } else {
-      nota = grelha[fId]?.avaliador1 ?? 5;
+      // PROCESSO COM 3 AVALIADORES:
+      // O Comandante é o último avaliador e quem determina a média final.
+      if (avaliadorAtivo === 'avaliador1') {
+        nota = grelha[fId]?.avaliador1 ?? 5;
+      } else if (avaliadorAtivo === 'avaliador2') {
+        nota = grelha[fId]?.avaliador2 ?? grelha[fId]?.avaliador1 ?? 5;
+      } else {
+        // cmdte ou efetivo
+        nota = grelha[fId]?.cmdte ?? grelha[fId]?.avaliador2 ?? grelha[fId]?.avaliador1 ?? 5;
+      }
     }
 
     notasEfetivas[fId] = nota;

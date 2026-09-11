@@ -30,9 +30,9 @@ export function DossieHeader({ militar }: DossieHeaderProps) {
         )}
 
         {/* Status Overlay */}
-        <div className="absolute bottom-0 w-full bg-[#0B1612]/90 backdrop-blur-md p-2 flex justify-center items-center gap-2 border-t border-white/10">
-          <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse shadow-[0_0_8px_rgba(52,211,153,0.6)]" />
-          <span className="text-[10px] font-semibold font-mono text-white tracking-wide uppercase">
+        <div className="absolute bottom-0 w-full bg-[#0B1612]/90 p-2 flex justify-center items-center gap-2 border-t border-white/10">
+          <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
+          <span className="text-[10px] font-medium font-mono text-white tracking-wider uppercase">
             Serviço Ativo • {militar.qe}
           </span>
         </div>
@@ -44,7 +44,15 @@ export function DossieHeader({ militar }: DossieHeaderProps) {
           <div className="flex flex-col sm:flex-row justify-between items-start gap-4">
             <div>
               <div className="flex items-center gap-2">
-                <span className="px-2.5 py-0.5 rounded-full bg-slate-100 text-slate-700 text-[10.5px] font-semibold font-mono border border-slate-200/80 uppercase">
+                <span
+                  className={`px-2.5 py-0.5 rounded-full text-[10.5px] font-bold font-mono border uppercase ${
+                    militar.categoria === 'OFICIAL'
+                      ? 'bg-emerald-50 text-emerald-900 border-emerald-200'
+                      : militar.categoria === 'SARGENTO'
+                      ? 'bg-blue-50 text-blue-900 border-blue-200'
+                      : 'bg-amber-50 text-amber-900 border-amber-200'
+                  }`}
+                >
                   {militar.posto} • {militar.categoria}
                 </span>
               </div>

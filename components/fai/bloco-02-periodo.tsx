@@ -31,7 +31,7 @@ export function Bloco02Periodo({
     <div className="p-6 border-b border-border bg-[#FAFBFC]">
       <div className="flex justify-between items-center mb-4">
         <h3 className="text-xs font-bold text-primary uppercase tracking-wider flex items-center gap-2">
-          <span className="w-2 h-2 rounded-full bg-[#C5962B]"></span>
+          <span className="w-2 h-2 rounded-full bg-[#B89047]"></span>
           BLOCO 02 - PERÍODO E TIPO DE AVALIAÇÃO
         </h3>
         <div className="flex items-center gap-2">

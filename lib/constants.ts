@@ -251,3 +251,12 @@ export const QUADROS_ESPECIAIS = [
   { sigla: 'QRC', nome: 'Quadro de Reserva por Contrato' },
   { sigla: 'QCO', nome: 'Quadro Complementar de Oficiais' },
 ];
+
+export const ETAPAS_WORKFLOW = [
+  { id: 'AVALIADOR_1', titulo: '1º Avaliador', prazoDias: 10, descricao: 'Preenchimento e fundamentação inicial das notas regimentais.' },
+  { id: 'AVALIADOR_2', titulo: '2º Avaliador', prazoDias: 5, descricao: 'Ratificação ou discordância fundamentada das notas.' },
+  { id: 'CMDTE', titulo: 'Comandante U/E/O', prazoDias: 5, descricao: 'Despacho de comando e exercício do poder de substituição.' },
+  { id: 'CONSELHO_ASC', titulo: 'Conselho da ASC', prazoDias: 5, descricao: 'Parecer técnico da Arma, Serviço ou Classe correspondente.' },
+  { id: 'DPQ', titulo: 'Direcção de Pessoal e Quadros', prazoDias: 5, descricao: 'Homologação final, registo e encerramento do processo FAI.' },
+];
+
