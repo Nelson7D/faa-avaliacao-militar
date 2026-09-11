@@ -13,6 +13,8 @@ function ShellContent({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const router = useRouter();
   const { profile, loading } = useAuth();
+  const [mobileMenuOpen, setMobileMenuOpen] = React.useState(false);
+
   const cleanPath = (pathname || '').replace(/\/$/, '') || '/';
   const isAuthPage = cleanPath === '/login' || cleanPath === '/cadastro';
 
@@ -45,8 +47,6 @@ function ShellContent({ children }: { children: React.ReactNode }) {
     cleanPath.startsWith('/fai/nova') ||
     cleanPath === '/admin' ||
     cleanPath === '/ia-analytics';
-
-  const [mobileMenuOpen, setMobileMenuOpen] = React.useState(false);
 
   return (
     <div className="min-h-screen bg-background font-sans antialiased text-foreground flex">
