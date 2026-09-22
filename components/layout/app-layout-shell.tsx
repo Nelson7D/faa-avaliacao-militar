@@ -18,11 +18,35 @@ function ShellContent({ children }: { children: React.ReactNode }) {
   const cleanPath = (pathname || '').replace(/\/$/, '') || '/';
   const isAuthPage = cleanPath === '/login' || cleanPath === '/cadastro';
 
+  // Role Protection Checks
+  const isMilitarAvaliado = profile?.role === 'MILITAR_AVALIADO';
+  const isAllowedForAvaliado =
+    cleanPath === '/minha-fai' ||
+    (profile?.nip ? cleanPath === `/militares/${profile.nip}` : false);
+
+  const isBlockedForAvaliado = isMilitarAvaliado && !isAllowedForAvaliado;
+
+  // Rotas vedadas ao 1º Avaliador (privativas de DPQ/Admin/Comando)
+  const isBlockedForAvaliador1 =
+    profile?.role === 'AVALIADOR_1' &&
+    (cleanPath === '/admin' ||
+      cleanPath === '/cadastro' ||
+      cleanPath === '/impugnacoes' ||
+      cleanPath === '/ia-analytics');
+
   useEffect(() => {
     if (!loading && !profile && !isAuthPage) {
       router.push('/login');
     }
   }, [loading, profile, isAuthPage, router]);
+
+  useEffect(() => {
+    if (!loading && profile && isMilitarAvaliado) {
+      if (cleanPath === '/' || cleanPath === '/dashboard') {
+        router.push('/minha-fai');
+      }
+    }
+  }, [loading, profile, isMilitarAvaliado, cleanPath, router]);
 
   if (isAuthPage) {
     return <>{children}</>;
@@ -41,42 +65,59 @@ function ShellContent({ children }: { children: React.ReactNode }) {
     return null; // Will redirect via useEffect
   }
 
-  // Role Protection Check for Evaluator / Admin only routes
-  const isMilitarAvaliado = profile.role === 'MILITAR_AVALIADO';
-  const isEvaluatorOnlyRoute =
-    cleanPath.startsWith('/fai/nova') ||
-    cleanPath === '/admin' ||
-    cleanPath === '/ia-analytics';
-
   return (
     <div className="min-h-screen bg-background font-sans antialiased text-foreground flex">
       <Sidebar mobileOpen={mobileMenuOpen} onMobileClose={() => setMobileMenuOpen(false)} />
       <div className="flex-1 md:ml-sidebar-width ml-0 flex flex-col min-h-screen transition-all">
         <TopNavbar onOpenMobileMenu={() => setMobileMenuOpen(true)} />
         <main className="flex-1 p-4 sm:p-6 md:p-8 max-w-[1600px] w-full">
-          {isMilitarAvaliado && isEvaluatorOnlyRoute ? (
-            <div className="max-w-xl mx-auto my-12 p-8 bg-white border border-slate-200/90 rounded-2xl shadow-card text-center space-y-4">
+          {isBlockedForAvaliado ? (
+            <div className="max-w-xl mx-auto my-12 p-8 bg-white border border-slate-200/90 rounded-2xl shadow-card text-center space-y-4 animate-in fade-in">
               <div className="inline-flex p-3 bg-amber-50 rounded-full border border-amber-200 text-[#B89047]">
                 <ShieldAlert className="w-8 h-8" />
               </div>
-              <h2 className="text-base font-bold text-slate-900 uppercase">
-                Acesso Reservado a Oficiais Avaliadores e Comando
+              <h2 className="text-base font-bold text-slate-900 uppercase tracking-tight">
+                Acesso Exclusivo à Avaliação Própria
               </h2>
               <p className="text-xs text-slate-600 leading-relaxed">
-                Como <strong>{profile.posto} {profile.nomeCompleto}</strong> (Militar Avaliado), o seu perfil regimental não possui permissão para avaliar outros militares ou administrar o sistema.
+                Como <strong>{profile.posto} {profile.nomeCompleto}</strong> (Militar Avaliado), o seu acesso ao sistema está estritamente restrito à consulta da sua própria avaliação (notas atribuídas, fatores, parecer e tomada de conhecimento formal) e ao seu dossiê individual.
               </p>
               <div className="p-3 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-700 font-mono">
-                Aceda à aba <strong>Minha FAI</strong> para consultar a sua nota, tomar conhecimento formal ou interpor recurso/reclamação.
+                Não é permitido consultar dados ou avaliações de outros militares nem aceder a painéis de gestão interna.
               </div>
               <div className="pt-2 flex justify-center gap-3">
                 <Link href="/minha-fai">
                   <Button variant="default" size="sm" className="text-xs flex items-center gap-1.5 bg-[#0F3323] hover:bg-[#184A34] text-white">
-                    <Award className="w-4 h-4 text-[#D4AF37]" /> Ir para Minha FAI
+                    <Award className="w-4 h-4 text-[#D4AF37]" /> Minha FAI
                   </Button>
                 </Link>
                 <Link href={`/militares/${profile.nip}`}>
                   <Button variant="outline" size="sm" className="text-xs">
                     Meu Dossiê
+                  </Button>
+                </Link>
+              </div>
+            </div>
+          ) : isBlockedForAvaliador1 ? (
+            <div className="max-w-xl mx-auto my-12 p-8 bg-white border border-slate-200/90 rounded-2xl shadow-card text-center space-y-4 animate-in fade-in">
+              <div className="inline-flex p-3 bg-amber-50 rounded-full border border-amber-200 text-[#B89047]">
+                <ShieldAlert className="w-8 h-8" />
+              </div>
+              <h2 className="text-base font-bold text-slate-900 uppercase tracking-tight">
+                Funcionalidade Fora do Âmbito do 1º Avaliador
+              </h2>
+              <p className="text-xs text-slate-600 leading-relaxed">
+                As atribuições do <strong>Primeiro Avaliador</strong> limitam-se estritamente à visualização dos seus subordinados diretos, consulta de informações necessárias e realização da avaliação dos efetivos que lhe estão diretamente subordinados.
+              </p>
+              <div className="pt-2 flex justify-center gap-3">
+                <Link href="/militares">
+                  <Button variant="default" size="sm" className="text-xs bg-[#0F3323] hover:bg-[#184A34] text-white">
+                    Meus Subordinados
+                  </Button>
+                </Link>
+                <Link href="/fai/nova">
+                  <Button variant="outline" size="sm" className="text-xs">
+                    Avaliar Subordinados
                   </Button>
                 </Link>
               </div>

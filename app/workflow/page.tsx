@@ -8,6 +8,8 @@ import { WorkflowAuditTable } from '@/components/workflow/workflow-audit-table';
 import { TramitarModal } from '@/components/workflow/tramitar-modal';
 import { LayoutGrid, Table as TableIcon, Search, FilterX, GitBranch } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { useAuth } from '@/context/auth-context';
+import { canAcessarFai, isSuperiorHierarquico } from '@/lib/hierarchy';
 
 const COLUMNS: EtapaWorkflow[] = [
   'AVALIADOR_1',
@@ -18,6 +20,7 @@ const COLUMNS: EtapaWorkflow[] = [
 ];
 
 export default function WorkflowPage() {
+  const { profile } = useAuth();
   const [fais, setFais] = useState<FaiDocument[]>([]);
   const [loading, setLoading] = useState(true);
   const [viewMode, setViewMode] = useState<'kanban' | 'table'>('kanban');
@@ -46,6 +49,19 @@ export default function WorkflowPage() {
   }, []);
 
   const filteredFais = fais.filter((fai) => {
+    // Ponto 2 e Ponto 3: Limitar visualização aos processos sob responsabilidade do militar
+    if (!canAcessarFai(profile, fai)) {
+      return false;
+    }
+
+    // Para o 1º Avaliador, limita estritamente às suas avaliações ou subordinados diretos
+    if (profile?.role === 'AVALIADOR_1') {
+      const isMeuProcesso =
+        fai.pareceres?.avaliador1?.nip === profile.nip ||
+        (fai.militar?.posto && isSuperiorHierarquico(profile.posto, fai.militar.posto));
+      if (!isMeuProcesso) return false;
+    }
+
     const term = searchTerm.toLowerCase();
     const matchesSearch =
       fai.militarNip?.toLowerCase().includes(term) ||

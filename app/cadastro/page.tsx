@@ -10,7 +10,8 @@ import { POSTOS_MILITARES } from '@/lib/constants';
 
 export default function CadastroPage() {
   const router = useRouter();
-  const { registerMilitar } = useAuth();
+  const { profile, registerMilitar } = useAuth();
+  const isAuthorized = profile?.role === 'DPQ' || profile?.role === 'ADMIN';
 
   const [nip, setNip] = useState('');
   const [nomeCompleto, setNomeCompleto] = useState('');
@@ -86,21 +87,42 @@ export default function CadastroPage() {
 
         {/* Clean White Card */}
         <div className="bg-white border border-slate-200/80 rounded-2xl p-6 sm:p-8 shadow-xl space-y-4">
-          {error && (
-            <div className="p-3 bg-rose-50 border border-rose-200 rounded-xl text-xs text-rose-800 flex items-center gap-2">
-              <AlertCircle className="w-4 h-4 shrink-0 text-rose-600" />
-              <span>{error}</span>
+          {profile && !isAuthorized ? (
+            <div className="text-center py-6 space-y-4">
+              <div className="inline-flex p-3 bg-amber-50 rounded-full text-amber-800 border border-amber-200">
+                <AlertCircle className="w-8 h-8" />
+              </div>
+              <h2 className="text-sm font-bold text-slate-900 uppercase">
+                Acesso Reservado ao Órgão de Pessoal e Quadros (DPQ)
+              </h2>
+              <p className="text-xs text-slate-600 max-w-sm mx-auto leading-relaxed">
+                A responsabilidade de inserção, gestão e atualização dos dados dos efetivos no sistema de avaliação pertence exclusivamente ao <strong>Chefe do Pessoal e Quadro</strong> e à administração.
+              </p>
+              <div className="pt-2">
+                <Link href={profile.role === 'MILITAR_AVALIADO' ? '/minha-fai' : '/dashboard'}>
+                  <Button size="sm" className="text-xs bg-[#0F3323] hover:bg-[#184A34] text-white">
+                    Voltar ao Início
+                  </Button>
+                </Link>
+              </div>
             </div>
-          )}
+          ) : (
+            <>
+              {error && (
+                <div className="p-3 bg-rose-50 border border-rose-200 rounded-xl text-xs text-rose-800 flex items-center gap-2">
+                  <AlertCircle className="w-4 h-4 shrink-0 text-rose-600" />
+                  <span>{error}</span>
+                </div>
+              )}
 
-          {success && (
-            <div className="p-3 bg-emerald-50 border border-emerald-200 rounded-xl text-xs text-emerald-800 flex items-center gap-2">
-              <CheckCircle2 className="w-4 h-4 shrink-0 text-emerald-600" />
-              <span>Militar cadastrado com sucesso! A redirecionar...</span>
-            </div>
-          )}
+              {success && (
+                <div className="p-3 bg-emerald-50 border border-emerald-200 rounded-xl text-xs text-emerald-800 flex items-center gap-2">
+                  <CheckCircle2 className="w-4 h-4 shrink-0 text-emerald-600" />
+                  <span>Militar cadastrado com sucesso! A redirecionar...</span>
+                </div>
+              )}
 
-          <form onSubmit={handleSubmit} className="space-y-3.5">
+              <form onSubmit={handleSubmit} className="space-y-3.5">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div className="space-y-1">
                 <label className="text-xs font-semibold text-slate-700 flex items-center gap-1">
@@ -224,6 +246,8 @@ export default function CadastroPage() {
               {loading ? 'A registar...' : 'Cadastrar Militar'} <ArrowRight className="w-4 h-4 text-[#D4AF37]" />
             </Button>
           </form>
+          </>
+          )}
         </div>
 
         {/* Minimalist Switch Link */}

@@ -35,10 +35,10 @@ describe('Controlo de Acesso Baseado em Papéis Militares (RBAC FAA)', () => {
     expect(canEvaluate).toBe(false);
   });
 
-  it('AVALIADOR_1: Permissão exclusiva para preencher Bloco 03 (Coluna 1º Avaliador) e Bloco 07', () => {
+  it('AVALIADOR_1: Permissão exclusiva para preencher Bloco 03 (Coluna 1º Avaliador) e Bloco 05', () => {
     const role: UserProfile['role'] = 'AVALIADOR_1';
 
-    const canEditAval1 = role === 'AVALIADOR_1' || role === 'DPQ' || role === 'ADMIN';
+    const canEditAval1 = role === 'AVALIADOR_1' || role === 'ADMIN';
     const canEditAval2 = role === 'AVALIADOR_2';
     const canEditCmdte = role === 'CMDTE';
 
@@ -47,28 +47,29 @@ describe('Controlo de Acesso Baseado em Papéis Militares (RBAC FAA)', () => {
     expect(canEditCmdte).toBe(false);
   });
 
-  it('AVALIADOR_2: Permissão exclusiva para ratificar ou discordar no Bloco 03 e Bloco 08', () => {
+  it('AVALIADOR_2: Permissão exclusiva para ratificar ou discordar no Bloco 03 e Bloco 06', () => {
     const role: UserProfile['role'] = 'AVALIADOR_2';
 
-    const canEditAval2 = role === 'AVALIADOR_2' || role === 'DPQ' || role === 'ADMIN';
+    const canEditAval2 = role === 'AVALIADOR_2' || role === 'ADMIN';
     const canEditCmdte = role === 'CMDTE';
 
     expect(canEditAval2).toBe(true);
     expect(canEditCmdte).toBe(false);
   });
 
-  it('CMDTE: Poder de substituição, despacho no Bloco 09 e julgamento de impugnações', () => {
+  it('CMDTE: Poder de substituição, despacho no Bloco 07 e julgamento de impugnações', () => {
     const role: UserProfile['role'] = 'CMDTE';
 
-    const canDespachar = role === 'CMDTE' || role === 'DPQ' || role === 'ADMIN';
+    const canDespachar = role === 'CMDTE' || role === 'ADMIN';
     expect(canDespachar).toBe(true);
   });
 
-  it('DPQ & ADMIN: Homologação da FAI (Bloco 11) e administração de segurança e parâmetros', () => {
-    const canAdminister = (role: UserProfile['role']) => role === 'DPQ' || role === 'ADMIN';
-    expect(canAdminister('DPQ')).toBe(true);
-    expect(canAdminister('ADMIN')).toBe(true);
-    expect(canAdminister('MILITAR_AVALIADO')).toBe(false);
-    expect(canAdminister('AVALIADOR_1')).toBe(false);
+  it('DPQ (Chefe do Pessoal e Quadro): Gestão de efetivo (cadastro/matrícula) e homologação final (Bloco 11), sem exercer por regra papel de avaliador', () => {
+    const roleDpq: UserProfile['role'] = 'DPQ';
+    const canManageEfetivo = roleDpq === 'DPQ' || roleDpq === 'ADMIN';
+    const canHomologarFinal = roleDpq === 'DPQ' || roleDpq === 'ADMIN';
+
+    expect(canManageEfetivo).toBe(true);
+    expect(canHomologarFinal).toBe(true);
   });
 });

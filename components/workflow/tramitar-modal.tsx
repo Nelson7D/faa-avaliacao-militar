@@ -20,7 +20,6 @@ interface TramitarModalProps {
 
 export function TramitarModal({ fai, onClose, onSuccess }: TramitarModalProps) {
   const { profile } = useAuth();
-  if (!fai) return null;
 
   const getProximaEtapa = (atual: EtapaWorkflow): EtapaWorkflow => {
     switch (atual) {
@@ -39,7 +38,7 @@ export function TramitarModal({ fai, onClose, onSuccess }: TramitarModalProps) {
     }
   };
 
-  const etapaAtual = fai.workflow.etapaAtual;
+  const etapaAtual = fai?.workflow?.etapaAtual || 'AVALIADOR_1';
   const proximaEtapa = getProximaEtapa(etapaAtual);
   const configProxima = WORKFLOW_ETAPAS_CONFIG[proximaEtapa];
 
@@ -51,8 +50,20 @@ export function TramitarModal({ fai, onClose, onSuccess }: TramitarModalProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
 
+  if (!fai) return null;
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (profile?.role === 'MILITAR_AVALIADO') {
+      setErrorMsg('O militar avaliado não possui permissão regimental para tramitar o processo.');
+      return;
+    }
+
+    if (profile?.role === 'AVALIADOR_1' && etapaAtual !== 'AVALIADOR_1') {
+      setErrorMsg('O 1º Avaliador apenas tem competência para tramitar processos da etapa de 1º Avaliador.');
+      return;
+    }
+
     if (!pinAssinatura || pinAssinatura.length < 4) {
       setErrorMsg('Insira o PIN de assinatura militar de 4 dígitos.');
       return;

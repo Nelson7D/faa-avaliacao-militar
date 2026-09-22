@@ -34,6 +34,7 @@ import { TramitarModal } from '@/components/workflow/tramitar-modal';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { useAuth } from '@/context/auth-context';
+import { canAcessarFai } from '@/lib/hierarchy';
 
 export default function FaiDetailClient({ faiId }: { faiId: string }) {
   const router = useRouter();
@@ -52,6 +53,8 @@ export default function FaiDetailClient({ faiId }: { faiId: string }) {
   const [papelDesbloqueado, setPapelDesbloqueado] = useState<PapelAvaliador | undefined>();
   const [codigoMensagem, setCodigoMensagem] = useState('');
   const [validandoCodigo, setValidandoCodigo] = useState(false);
+  const [savingDraft, setSavingDraft] = useState(false);
+  const [saveErrorMessage, setSaveErrorMessage] = useState('');
 
   useEffect(() => {
     async function loadFai() {
@@ -138,8 +141,32 @@ export default function FaiDetailClient({ faiId }: { faiId: string }) {
     );
   }
 
-  // Recalculate Live Regimental Math strictly considering 2 or 3 evaluators
-  const categoriaEfetiva = simularPraça ? 'PRACA' : fai.militar?.categoria || 'OFICIAL';
+  // Princípio da Hierarquia Militar FAA (Ponto 2 e Ponto 4):
+  if (!canAcessarFai(profile, fai)) {
+    return (
+      <div className="max-w-xl mx-auto my-12 p-8 bg-white border border-rose-200 rounded-2xl shadow-card text-center space-y-4 animate-in fade-in">
+        <div className="inline-flex p-3 bg-rose-50 rounded-full text-rose-700 border border-rose-200">
+          <AlertTriangle className="w-8 h-8" />
+        </div>
+        <h2 className="text-base font-bold text-slate-900 uppercase tracking-tight">
+          Acesso Negado • Violação da Hierarquia Militar
+        </h2>
+        <p className="text-xs text-slate-600 leading-relaxed">
+          Em observância rigorosa ao <strong>Princípio da Hierarquia Militar das FAA</strong>, o militar não possui autorização para consultar os dados ou a Ficha de Avaliação Individual de um superior hierárquico ou de processos fora da sua responsabilidade.
+        </p>
+        <div className="pt-2">
+          <Link href={profile?.role === 'MILITAR_AVALIADO' ? '/minha-fai' : '/militares'}>
+            <Button size="sm" className="text-xs bg-[#0F3323] hover:bg-[#184A34] text-white">
+              Voltar ao Início
+            </Button>
+          </Link>
+        </div>
+      </div>
+    );
+  }
+
+  // Recalculate Live Regimental Math strictly for Praças (Divisor 31) considering 2 or 3 evaluators
+  const categoriaEfetiva = 'PRACA';
   const numAvaliadoresEfetivo = fai.numeroAvaliadores || 3;
   const resultadoCalculo = calcularMediaRegimental(
     categoriaEfetiva,
@@ -150,9 +177,6 @@ export default function FaiDetailClient({ faiId }: { faiId: string }) {
       numeroAvaliadores: numAvaliadoresEfetivo,
     }
   );
-
-  const [savingDraft, setSavingDraft] = useState(false);
-  const [saveErrorMessage, setSaveErrorMessage] = useState('');
 
   const handleSaveDraft = async () => {
     setSavingDraft(true);
@@ -409,11 +433,9 @@ export default function FaiDetailClient({ faiId }: { faiId: string }) {
           {activeStep === 2 && (
             <div>
               <Bloco03Grelha
-                categoria={categoriaEfetiva}
+                categoria="PRACA"
                 grelha={fai.grelha || {}}
                 onGrelhaChange={(novaGrelha) => setFai({ ...fai, grelha: novaGrelha })}
-                perfilPraçaSimulado={simularPraça}
-                onTogglePraçaSimulada={(val) => setSimularPraça(val)}
                 numeroAvaliadores={numAvaliadoresEfetivo}
                 papelDesbloqueado={papelDesbloqueado}
                 avaliadorInterveniente={

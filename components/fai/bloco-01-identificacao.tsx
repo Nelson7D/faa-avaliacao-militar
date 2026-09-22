@@ -80,15 +80,15 @@ export function Bloco01Identificacao({
                 onMilitarChange({
                   ...militar,
                   posto: e.target.value,
-                  categoria: selectedPosto?.categoria || militar.categoria,
+                  categoria: 'PRACA',
                 });
               }}
               className="w-full bg-transparent border-none p-0 focus:ring-0 text-xs font-bold text-primary uppercase outline-none"
             >
-              <option value="">Selecione o Posto...</option>
-              {POSTOS_MILITARES.map((p) => (
+              <option value="">Selecione o Posto da Praça...</option>
+              {POSTOS_MILITARES.filter((p) => p.categoria === 'PRACA').map((p) => (
                 <option key={p.id} value={p.nome}>
-                  {p.nome} ({p.categoria})
+                  {p.nome} (PRACA)
                 </option>
               ))}
             </select>

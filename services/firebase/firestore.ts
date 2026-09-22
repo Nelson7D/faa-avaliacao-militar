@@ -139,7 +139,43 @@ export async function fetchFaiById(id: string): Promise<FaiDocument | undefined>
   }
 }
 
+export async function fetchFaiByMilitarNip(nip: string): Promise<FaiDocument | undefined> {
+  if (!isFirebaseConfigured() || !db) {
+    return undefined;
+  }
+  try {
+    const col = collection(db, 'fais');
+    const q = query(col, where('militarNip', '==', nip));
+    const snap = await getDocs(q);
+    if (!snap.empty) {
+      const fai = snap.docs[0].data() as FaiDocument;
+      const militar = await fetchMilitarByNip(fai.militarNip);
+      return {
+        ...fai,
+        workflow: fai.workflow || {
+          etapaAtual: 'AVALIADOR_1',
+          diasNaEtapa: 3,
+          prazoLimiteEtapa: 30,
+          atrasado: false,
+          historico: [],
+        },
+        grelha: fai.grelha || {},
+        militar,
+      };
+    }
+    return undefined;
+  } catch (err) {
+    console.warn('Firestore fetchFaiByMilitarNip error:', err);
+    return undefined;
+  }
+}
+
 export async function saveFaiDocument(fai: FaiDocument): Promise<FaiDocument> {
+  // Garantia Regimental: apenas militares da categoria Praça podem ser avaliados
+  if (fai.militar?.categoria && fai.militar.categoria !== 'PRACA') {
+    throw new Error(`Regulamento Militar FAA: Apenas militares da categoria Praça podem ser avaliados (NIP ${fai.militarNip} é ${fai.militar.categoria}).`);
+  }
+
   if (isFirebaseConfigured() && db) {
     try {
       await setDoc(doc(db, 'fais', fai.id), sanitizeFirestoreData(fai));
@@ -458,6 +494,11 @@ export async function criarAtribuicaoAvaliacao(
     | 'atualizadoEm'
   >
 ): Promise<AtribuicaoAvaliacao> {
+  // Garantia Regimental: apenas militares da categoria Praça podem ser avaliados
+  if (dados.militarAvaliadoCategoria && dados.militarAvaliadoCategoria !== 'PRACA') {
+    throw new Error(`Regulamento Militar FAA: Apenas militares da categoria Praça podem ser avaliados (Militar indicado é ${dados.militarAvaliadoCategoria}).`);
+  }
+
   const id = `ATR-${Date.now().toString().slice(-6)}-${Math.random().toString(36).substr(2, 4).toUpperCase()}`;
   const codAval1 = gerarCodigoRegimental('AV1');
   const codAval2 = dados.numeroAvaliadores >= 2 ? gerarCodigoRegimental('AV2') : undefined;

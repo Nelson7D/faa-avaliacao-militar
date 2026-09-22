@@ -17,7 +17,7 @@ import {
   Info,
 } from 'lucide-react';
 import { useAuth } from '@/context/auth-context';
-import { fetchFais, assinarTomadaConhecimento, fetchFaiById } from '@/services/firebase/firestore';
+import { fetchFaiByMilitarNip, assinarTomadaConhecimento, fetchFaiById } from '@/services/firebase/firestore';
 import { FaiDocument } from '@/types/fai';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -35,11 +35,12 @@ export default function MinhaFaiPage() {
   useEffect(() => {
     async function loadMyFai() {
       try {
-        const allFais = await fetchFais();
-        const myFai = profile?.nip
-          ? allFais.find((f) => f.militarNip === profile.nip) || null
-          : null;
-        setFai(myFai);
+        if (profile?.nip) {
+          const myFai = await fetchFaiByMilitarNip(profile.nip);
+          setFai(myFai || null);
+        } else {
+          setFai(null);
+        }
       } catch (err) {
         console.error('Erro ao carregar FAI do militar:', err);
       } finally {

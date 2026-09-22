@@ -7,6 +7,7 @@ import { formatDataPt, formatNip } from '@/lib/utils';
 import { saveMilitarData } from '@/services/firebase/firestore';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { useAuth } from '@/context/auth-context';
 
 interface MatriculaTabProps {
   militar: Militar;
@@ -14,6 +15,9 @@ interface MatriculaTabProps {
 }
 
 export function MatriculaTab({ militar, onMilitarUpdated }: MatriculaTabProps) {
+  const { profile } = useAuth();
+  const canEditMatricula = profile?.role === 'DPQ' || profile?.role === 'ADMIN';
+
   const [isEditing, setIsEditing] = useState(false);
   const [formData, setFormData] = useState<Militar>({ ...militar });
   const [savedMsg, setSavedMsg] = useState(false);
@@ -115,37 +119,43 @@ export function MatriculaTab({ militar, onMilitarUpdated }: MatriculaTabProps) {
             </div>
           </div>
 
-          {!isEditing ? (
-            <Button
-              size="sm"
-              variant="outline"
-              onClick={() => setIsEditing(true)}
-              className="text-xs flex items-center gap-1.5"
-            >
-              <Edit3 className="w-3.5 h-3.5" /> Editar Dados
-            </Button>
+          {canEditMatricula ? (
+            !isEditing ? (
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={() => setIsEditing(true)}
+                className="text-xs flex items-center gap-1.5"
+              >
+                <Edit3 className="w-3.5 h-3.5" /> Editar Dados
+              </Button>
+            ) : (
+              <div className="flex items-center gap-2">
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  onClick={() => {
+                    setFormData({ ...militar });
+                    setIsEditing(false);
+                  }}
+                  className="text-xs"
+                >
+                  Cancelar
+                </Button>
+                <Button
+                  size="sm"
+                  variant="default"
+                  onClick={handleSave}
+                  className="text-xs flex items-center gap-1 shadow-xs"
+                >
+                  <Save className="w-3.5 h-3.5" /> Guardar Alterações
+                </Button>
+              </div>
+            )
           ) : (
-            <div className="flex items-center gap-2">
-              <Button
-                size="sm"
-                variant="ghost"
-                onClick={() => {
-                  setFormData({ ...militar });
-                  setIsEditing(false);
-                }}
-                className="text-xs"
-              >
-                Cancelar
-              </Button>
-              <Button
-                size="sm"
-                variant="default"
-                onClick={handleSave}
-                className="text-xs flex items-center gap-1 shadow-xs"
-              >
-                <Save className="w-3.5 h-3.5" /> Guardar Alterações
-              </Button>
-            </div>
+            <span className="text-[10px] font-mono text-slate-500 bg-slate-100 px-2.5 py-1 rounded-full border border-slate-200/60">
+              Gestão Exclusiva: Órgão de Pessoal (DPQ)
+            </span>
           )}
         </div>
 

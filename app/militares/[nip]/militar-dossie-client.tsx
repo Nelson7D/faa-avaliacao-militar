@@ -10,9 +10,13 @@ import { MatriculaTab } from '@/components/dossie/matricula-tab';
 import { HistoricoFaisTab } from '@/components/dossie/historico-fais-tab';
 import { PromocoesTab } from '@/components/dossie/promocoes-tab';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
-import { FileText, History, Award } from 'lucide-react';
+import { FileText, History, Award, ShieldAlert } from 'lucide-react';
+import { useAuth } from '@/context/auth-context';
+import { canConsultarMilitar } from '@/lib/hierarchy';
+import { Button } from '@/components/ui/button';
 
 export default function MilitarDossieClient({ nip }: { nip: string }) {
+  const { profile } = useAuth();
   const [militar, setMilitar] = useState<Militar | null>(null);
   const [fais, setFais] = useState<FaiDocument[]>([]);
   const [loading, setLoading] = useState(true);
@@ -59,6 +63,34 @@ export default function MilitarDossieClient({ nip }: { nip: string }) {
         <Link href="/dashboard" className="text-xs text-primary font-bold hover:underline">
           &larr; Voltar ao Dashboard
         </Link>
+      </div>
+    );
+  }
+
+  // Princípio da Hierarquia Militar FAA (Ponto 2):
+  // Subordinado não tem permissão para consultar dossiê de superior
+  if (!canConsultarMilitar(profile, militar)) {
+    return (
+      <div className="max-w-xl mx-auto my-12 p-8 bg-white border border-rose-200 rounded-2xl shadow-card text-center space-y-4 animate-in fade-in">
+        <div className="inline-flex p-3 bg-rose-50 rounded-full text-rose-700 border border-rose-200">
+          <ShieldAlert className="w-8 h-8" />
+        </div>
+        <h2 className="text-base font-bold text-slate-900 uppercase tracking-tight">
+          Acesso Negado • Violação da Hierarquia Militar
+        </h2>
+        <p className="text-xs text-slate-600 leading-relaxed">
+          Em conformidade com o <strong>Princípio da Hierarquia Militar das FAA</strong>, o superior hierárquico tem acesso aos seus subordinados para efeitos funcionais e de avaliação, mas o subordinado não possui autorização para consultar dados cadastrais ou avaliações do seu superior hierárquico.
+        </p>
+        <p className="text-[11px] font-mono text-slate-500 bg-slate-50 p-2.5 rounded-lg border border-slate-200">
+          Utilizador Atual: {profile?.posto} {profile?.nomeGuerra || profile?.nomeCompleto} • Alvo: {militar.posto} {militar.nomeCompleto}
+        </p>
+        <div className="pt-2">
+          <Link href={profile?.role === 'MILITAR_AVALIADO' ? '/minha-fai' : '/militares'}>
+            <Button size="sm" className="text-xs bg-[#0F3323] hover:bg-[#184A34] text-white">
+              Voltar aos Registos Autorizados
+            </Button>
+          </Link>
+        </div>
       </div>
     );
   }

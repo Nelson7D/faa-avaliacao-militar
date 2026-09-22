@@ -18,6 +18,7 @@ import { Bloco10Preferencias } from '@/components/fai/bloco-10-preferencias';
 import { Bloco11Homologacao } from '@/components/fai/bloco-11-homologacao';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/context/auth-context';
+import { canAvaliarMilitar } from '@/lib/hierarchy';
 
 export default function NovaFaiPage() {
   const router = useRouter();
@@ -28,8 +29,8 @@ export default function NovaFaiPage() {
     nip: '',
     nomeCompleto: '',
     nomeGuerra: '',
-    posto: 'Tenente',
-    categoria: 'OFICIAL',
+    posto: 'Soldado',
+    categoria: 'PRACA',
     unidade: '',
     funcaoDesempenhada: '',
     asc: '',
@@ -55,10 +56,10 @@ export default function NovaFaiPage() {
     return initial;
   });
 
-  const [simularPraça, setSimularPraça] = useState(false);
   const [preferencias, setPreferencias] = useState<FaiDocument['preferenciasEmprego']>({
     comando: { op1: true },
     estado_maior: { op2: true },
+    ensino: { op3: true },
   });
 
   const [pareceres, setPareceres] = useState<FaiDocument['pareceres']>({
@@ -75,7 +76,9 @@ export default function NovaFaiPage() {
   useEffect(() => {
     async function load() {
       const data = await fetchMilitares();
-      setMilitares(data);
+      // Garantia Regimental: Apenas Praças subordinadas elegíveis para este avaliador
+      const pracasElegiveis = data.filter((m) => m.categoria === 'PRACA' && canAvaliarMilitar(profile, m));
+      setMilitares(pracasElegiveis);
       
       const atrIdParam = searchParams?.get('atribuicaoId');
       const nipParam = searchParams?.get('nip');
@@ -87,9 +90,14 @@ export default function NovaFaiPage() {
           setNumeroAvaliadores(atr.numeroAvaliadores);
           const mil = data.find((m) => m.nip === atr.militarAvaliadoNip);
           if (mil) {
-            setSelectedMilitar(mil);
-            setSimularPraça(mil.categoria === 'PRACA');
-            return;
+            if (mil.categoria !== 'PRACA') {
+              alert(`Regulamento Militar FAA: O militar ${mil.nomeCompleto} é ${mil.categoria}. Apenas Praças podem ser avaliadas.`);
+            } else if (!canAvaliarMilitar(profile, mil)) {
+              alert(`Regulamento Militar FAA: Não possui autorização hierárquica/regimental para avaliar ${mil.nomeCompleto}.`);
+            } else {
+              setSelectedMilitar(mil);
+              return;
+            }
           }
         }
       }
@@ -97,30 +105,43 @@ export default function NovaFaiPage() {
       if (nipParam) {
         const mil = data.find((m) => m.nip === nipParam);
         if (mil) {
-          setSelectedMilitar(mil);
-          setSimularPraça(mil.categoria === 'PRACA');
-          return;
+          if (mil.categoria !== 'PRACA') {
+            alert(`Regulamento Militar FAA: O militar ${mil.nomeCompleto} é ${mil.categoria}. Apenas Praças podem ser avaliadas.`);
+          } else if (!canAvaliarMilitar(profile, mil)) {
+            alert(`Regulamento Militar FAA: Não possui autorização hierárquica/regimental para avaliar ${mil.nomeCompleto}.`);
+          } else {
+            setSelectedMilitar(mil);
+            return;
+          }
         }
       }
 
-      if (data.length > 0) {
-        setSelectedMilitar(data[0]);
-        setSimularPraça(data[0].categoria === 'PRACA');
+      if (pracasElegiveis.length > 0) {
+        setSelectedMilitar(pracasElegiveis[0]);
       }
     }
     load();
-  }, [searchParams]);
+  }, [searchParams, profile]);
 
   const handleSearchNip = async (nip: string) => {
     const found = await fetchMilitarByNip(nip);
     if (found) {
+      if (found.categoria !== 'PRACA') {
+        alert(`Regulamento Militar FAA: O militar ${found.nomeCompleto} é ${found.categoria}. Apenas militares da categoria Praça podem ser avaliados no sistema.`);
+        return;
+      }
+      if (!canAvaliarMilitar(profile, found)) {
+        alert(`Regulamento Militar FAA: Não possui autorização hierárquica ou regimental para avaliar ${found.nomeCompleto}.`);
+        return;
+      }
       setSelectedMilitar(found);
-      setSimularPraça(found.categoria === 'PRACA');
+    } else {
+      alert(`Militar com NIP ${nip} não encontrado.`);
     }
   };
 
-  // Recalculate
-  const categoriaEfetiva = simularPraça ? 'PRACA' : selectedMilitar.categoria || 'OFICIAL';
+  // Categoria é estritamente Praça (Divisor 31 Regimental)
+  const categoriaEfetiva = 'PRACA';
   const resultadoCalculo = calcularMediaRegimental(
     categoriaEfetiva,
     grelha,
@@ -133,13 +154,17 @@ export default function NovaFaiPage() {
 
   const handleCreateFai = async () => {
     if (!selectedMilitar.nip) {
-      alert('Selecione um militar cadastrado antes de submeter a FAI.');
+      alert('Selecione uma Praça cadastrada antes de submeter a FAI.');
       return;
     }
 
-    const ano = anoInstrucao.split('/')[0] || '2025';
-    const newId = `FAI-${ano}-${Date.now().toString().slice(-4)}`;
-    const newDoc: FaiDocument = {
+    if (selectedMilitar.categoria && selectedMilitar.categoria !== 'PRACA') {
+      alert(`Regulamento Militar FAA: Apenas Praças podem ser avaliadas. Este militar é ${selectedMilitar.categoria}.`);
+      return;
+    }
+
+    const newId = `FAI-${anoInstrucao.split('/')[0]}-${selectedMilitar.nip}`;
+    const newFai: FaiDocument = {
       id: newId,
       militarNip: selectedMilitar.nip,
       militar: selectedMilitar as Militar,
@@ -156,30 +181,29 @@ export default function NovaFaiPage() {
       mediaPonderada: resultadoCalculo.MP,
       divisor: resultadoCalculo.divisor,
       classificacao: resultadoCalculo.classificacao,
-      pareceres: {
-        ...pareceres,
-        avaliador1: {
-          texto: pareceres?.avaliador1?.texto || 'Militar avaliado em conformidade regimental.',
-          nip: profile?.nip || '',
-          nome: profile ? `${profile.posto} ${profile.nomeGuerra || profile.nomeCompleto}` : '',
-          posto: profile?.posto || '',
-          data: new Date().toISOString().split('T')[0],
-          assinado: true,
-        },
-      },
+      pareceres,
       preferenciasEmprego: preferencias,
       workflow: {
         etapaAtual: 'AVALIADOR_1',
-        diasNaEtapa: 1,
+        diasNaEtapa: 0,
         prazoLimiteEtapa: 10,
         atrasado: false,
         dataEntradaEtapa: new Date().toISOString().split('T')[0],
+        historico: [
+          {
+            etapa: 'AVALIADOR_1',
+            dataTransicao: new Date().toISOString(),
+            responsavelNip: profile?.nip || 'SISTEMA',
+            responsavelNome: profile ? `${profile.posto} ${profile.nomeGuerra || profile.nomeCompleto}` : '1º Avaliador',
+            despacho: 'Abertura da FAI Digital e Atribuição de Notas Iniciais',
+          },
+        ],
       },
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
     };
 
-    await saveFaiDocument(newDoc);
+    await saveFaiDocument(newFai);
     if (atribuicaoId) {
       await vincularFaiAtribuicao(atribuicaoId, newId);
     }
@@ -224,27 +248,44 @@ export default function NovaFaiPage() {
         {/* Quick Militar Selector */}
         <div className="flex items-center gap-2">
           <label className="text-xs font-semibold text-slate-600 uppercase hidden sm:block">
-            Preencher Militar:
+            Preencher Praça:
           </label>
           <select
             onChange={(e) => {
               const m = militares.find((mil) => mil.nip === e.target.value);
               if (m) {
                 setSelectedMilitar(m);
-                setSimularPraça(m.categoria === 'PRACA');
               }
             }}
+            value={selectedMilitar.nip || ''}
             className="py-1.5 px-3 text-xs border border-slate-200 rounded-xl bg-white text-slate-900 focus:outline-none focus:ring-2 focus:ring-primary/20 shadow-2xs cursor-pointer font-medium"
           >
-            <option value="">Selecione um Militar cadastrado...</option>
+            <option value="">Selecione a Praça cadastrada...</option>
             {militares.map((mil) => (
               <option key={mil.nip} value={mil.nip}>
-                {mil.posto} {mil.nomeCompleto} (NIP {mil.nip} - {mil.categoria})
+                {mil.posto} {mil.nomeCompleto} (NIP {mil.nip})
               </option>
             ))}
           </select>
         </div>
       </div>
+
+      {profile?.role === 'DPQ' && (
+        <div className="p-4 bg-amber-50/80 border border-amber-200 rounded-2xl text-xs text-amber-950 space-y-1 shadow-2xs">
+          <div className="font-bold flex items-center gap-2 text-amber-900">
+            <ShieldAlert className="w-4 h-4 text-[#B89047]" />
+            <span>Regra Regimental: Chefe do Pessoal e Quadro (DPQ)</span>
+          </div>
+          <p className="leading-relaxed">
+            O Chefe do Pessoal e Quadro não exerce, por regra, a função de avaliador. A sua responsabilidade primordial é a gestão e inserção do efetivo. A avaliação restringe-se estritamente aos subordinados diretos da sua própria secção/órgão.
+          </p>
+          {militares.length === 0 && (
+            <p className="font-semibold text-amber-800 pt-1">
+              • Atualmente não foram encontradas Praças subordinadas diretas da sua secção pendentes de avaliação.
+            </p>
+          )}
+        </div>
+      )}
 
       <div className="executive-card rounded-2xl shadow-card overflow-hidden">
         {/* Stepper Header */}
@@ -277,11 +318,9 @@ export default function NovaFaiPage() {
         {activeStep === 2 && (
           <div>
             <Bloco03Grelha
-              categoria={categoriaEfetiva}
+              categoria="PRACA"
               grelha={grelha}
               onGrelhaChange={setGrelha}
-              perfilPraçaSimulado={simularPraça}
-              onTogglePraçaSimulada={setSimularPraça}
               numeroAvaliadores={numeroAvaliadores}
             />
             <Bloco04Classificacao resultado={resultadoCalculo} />

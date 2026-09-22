@@ -36,6 +36,7 @@ export const NAV_ITEMS: NavItemDef[] = [
     sublabel: 'Prontidão e KPIs',
     href: '/dashboard',
     icon: LayoutDashboard,
+    roles: ['ADMIN', 'DPQ', 'CMDTE', 'AVALIADOR_1', 'AVALIADOR_2'],
   },
   {
     label: 'Minha FAI',
@@ -77,13 +78,14 @@ export const NAV_ITEMS: NavItemDef[] = [
     sublabel: 'Reclamações & Recursos (15d)',
     href: '/impugnacoes',
     icon: Scale,
+    roles: ['ADMIN', 'DPQ', 'CMDTE'],
   },
   {
     label: 'Análise IA',
     sublabel: 'Pareceres & Predição',
     href: '/ia-analytics',
     icon: Brain,
-    roles: ['ADMIN', 'DPQ', 'CMDTE', 'AVALIADOR_1', 'AVALIADOR_2'],
+    roles: ['ADMIN', 'DPQ', 'CMDTE'],
   },
   {
     label: 'Administração',
@@ -120,6 +122,13 @@ export function Sidebar({ mobileOpen = false, onMobileClose }: SidebarProps) {
       return {
         ...item,
         href: profile?.nip ? `/militares/${profile.nip}` : '/militares',
+      };
+    }
+    if (item.label === 'Processos Individuais' && currentRole === 'AVALIADOR_1') {
+      return {
+        ...item,
+        label: 'Meus Subordinados',
+        sublabel: 'Efetivo para Avaliação',
       };
     }
     return item;

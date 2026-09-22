@@ -200,17 +200,9 @@ export function Bloco03Grelha({
         </div>
 
         <div className="flex items-center gap-2 flex-wrap">
-          {onTogglePraçaSimulada && (
-            <label className="flex items-center gap-2 cursor-pointer bg-slate-100 hover:bg-slate-200/70 px-3 py-1.5 rounded-xl border border-slate-300/80 text-xs font-semibold text-slate-800 select-none transition-all shadow-2xs">
-              <input
-                type="checkbox"
-                checked={isPraca}
-                onChange={(e) => onTogglePraçaSimulada(e.target.checked)}
-                className="accent-[#0F3323] h-4 w-4 rounded"
-              />
-              <span>Simular Praça (Divisor 31)</span>
-            </label>
-          )}
+          <span className="text-[11px] font-mono font-bold text-[#0F3323] bg-emerald-50 px-2.5 py-1 rounded-xl border border-emerald-200 shadow-2xs">
+            Avaliação de Praça (Divisor Base 31)
+          </span>
         </div>
       </div>
 

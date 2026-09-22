@@ -5,11 +5,14 @@ import Link from 'next/link';
 import { fetchMilitares } from '@/services/firebase/firestore';
 import { Militar } from '@/types/militar';
 import { formatNip } from '@/lib/utils';
-import { Search, UserCheck, Eye, Shield, UserPlus } from 'lucide-react';
+import { Search, UserCheck, Eye, Shield, UserPlus, ShieldAlert } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { useAuth } from '@/context/auth-context';
+import { canConsultarMilitar } from '@/lib/hierarchy';
 
 export default function MilitaresListPage() {
+  const { profile } = useAuth();
   const [militares, setMilitares] = useState<Militar[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [categoriaFilter, setCategoriaFilter] = useState('TODAS');
@@ -25,6 +28,12 @@ export default function MilitaresListPage() {
   }, []);
 
   const filtered = militares.filter((m) => {
+    // Princípio da Hierarquia Militar FAA (Ponto 2):
+    // Cada utilizador visualiza apenas os efetivos que lhe compete avaliar ou consultar
+    if (!canConsultarMilitar(profile, m)) {
+      return false;
+    }
+
     const term = searchTerm.toLowerCase();
     const matchesSearch =
       m.nip?.toLowerCase().includes(term) ||
@@ -36,23 +45,29 @@ export default function MilitaresListPage() {
     return matchesSearch && matchesCat;
   });
 
+  const canCadastrar = profile?.role === 'DPQ' || profile?.role === 'ADMIN';
+
   return (
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 pb-4 border-b border-slate-200/80">
         <div>
           <h1 className="text-xl font-bold text-slate-900 tracking-tight">
-            Processos Individuais e Efetivo Militar
+            {profile?.role === 'AVALIADOR_1' ? 'Efetivo Subordinado (Processos Individuais)' : 'Processos Individuais e Efetivo Militar'}
           </h1>
           <p className="text-xs text-slate-500 mt-0.5">
-            Cadastro geral de militares das Forças Armadas Angolanas • Dossiês e Folhas de Matrícula
+            {profile?.role === 'AVALIADOR_1'
+              ? `Militares subordinados ao ${profile.posto} ${profile.nomeGuerra || profile.nomeCompleto} para fins de avaliação regimental`
+              : 'Cadastro geral de militares das Forças Armadas Angolanas • Dossiês e Folhas de Matrícula'}
           </p>
         </div>
 
-        <Link href="/cadastro">
-          <Button size="sm" className="text-xs flex items-center gap-1.5 bg-[#B89047] hover:bg-[#A37E3A] text-white shadow-xs">
-            <UserPlus className="w-3.5 h-3.5" /> Cadastrar Militar
-          </Button>
-        </Link>
+        {canCadastrar && (
+          <Link href="/cadastro">
+            <Button size="sm" className="text-xs flex items-center gap-1.5 bg-[#B89047] hover:bg-[#A37E3A] text-white shadow-xs">
+              <UserPlus className="w-3.5 h-3.5" /> Cadastrar Militar
+            </Button>
+          </Link>
+        )}
       </div>
 
       {/* Filter Bar */}
