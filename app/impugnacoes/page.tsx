@@ -175,62 +175,62 @@ export default function ImpugnacoesPage() {
   return (
     <div className="space-y-6">
       {/* Top Header */}
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 pb-4 border-b border-slate-200/80">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 pb-4 border-b border-[#758652]/20">
         <div>
           <div className="flex items-center gap-2">
-            <Scale className="w-5 h-5 text-[#B89047]" />
-            <h2 className="text-xl font-bold text-slate-900 tracking-tight">
+            <Scale className="w-5 h-5 text-[#D4AF37]" />
+            <h2 className="text-xl sm:text-2xl font-bold text-slate-100 tracking-tight">
               Módulo de Impugnações & Recursos Hierárquicos
             </h2>
           </div>
-          <p className="text-xs text-slate-500 mt-1">
+          <p className="text-xs text-[#9EAF94] mt-1 font-medium">
             Gestão regimental de contestações de notas, fundamentações e despachos de comando (Prazo Legal de 15 Dias)
           </p>
         </div>
       </div>
 
-      {/* KPI Row */}
+      {/* Tactical KPI Row */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <div className="executive-card rounded-2xl p-5 flex flex-col justify-between h-28 shadow-card">
+        <div className="bg-[rgba(24,34,21,0.72)] backdrop-blur-xl border border-white/[0.08] rounded-2xl p-5 flex flex-col justify-between h-28 shadow-[0_8px_24px_rgba(0,0,0,0.35)]">
           <div className="flex justify-between items-start">
-            <span className="text-[11px] font-semibold text-slate-500 uppercase">Total de Processos</span>
-            <Scale className="w-4 h-4 text-slate-400" />
+            <span className="text-[11px] font-semibold text-[#8FA39A] uppercase">Total de Processos</span>
+            <Scale className="w-4 h-4 text-[#758652]" />
           </div>
-          <div className="font-data-mono text-3xl font-bold text-slate-900">{total}</div>
-          <div className="text-[11px] text-slate-400 font-mono">100% dos registos</div>
+          <div className="font-data-mono text-3xl font-bold text-slate-100">{total}</div>
+          <div className="text-[11px] text-[#9EAF94] font-mono">100% dos registos</div>
         </div>
 
-        <div className="executive-card rounded-2xl p-5 flex flex-col justify-between h-28 shadow-card border border-slate-200/90">
+        <div className="bg-[rgba(24,34,21,0.72)] backdrop-blur-xl border border-white/[0.08] rounded-2xl p-5 flex flex-col justify-between h-28 shadow-[0_8px_24px_rgba(0,0,0,0.35)]">
           <div className="flex justify-between items-start">
-            <span className="text-[11px] font-semibold text-slate-500 uppercase">Em Prazo (15 Dias)</span>
-            <div className="w-6 h-6 rounded-lg bg-amber-50 border border-amber-200 flex items-center justify-center">
-              <Clock className="w-3.5 h-3.5 text-[#B89047]" />
+            <span className="text-[11px] font-semibold text-[#8FA39A] uppercase">Em Prazo (15 Dias)</span>
+            <div className="w-6 h-6 rounded-lg bg-[rgba(18,25,16,0.85)] border border-[#758652]/40 flex items-center justify-center">
+              <Clock className="w-3.5 h-3.5 text-[#D4AF37]" />
             </div>
           </div>
-          <div className="font-data-mono text-3xl font-bold text-[#B89047]">{emPrazo}</div>
-          <div className="text-[11px] text-amber-800 font-medium font-mono">Em análise regimental</div>
+          <div className="font-data-mono text-3xl font-bold text-[#D4AF37]">{emPrazo}</div>
+          <div className="text-[11px] text-[#D4AF37]/90 font-medium font-mono">Em análise regimental</div>
         </div>
 
-        <div className="executive-card rounded-2xl p-5 flex flex-col justify-between h-28 shadow-card border border-slate-200/90">
+        <div className="bg-[rgba(24,34,21,0.72)] backdrop-blur-xl border border-white/[0.08] rounded-2xl p-5 flex flex-col justify-between h-28 shadow-[0_8px_24px_rgba(0,0,0,0.35)]">
           <div className="flex justify-between items-start">
-            <span className="text-[11px] font-semibold text-slate-500 uppercase">Deferidas / Retificadas</span>
-            <div className="w-6 h-6 rounded-lg bg-emerald-50 border border-emerald-200 flex items-center justify-center">
-              <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
+            <span className="text-[11px] font-semibold text-[#8FA39A] uppercase">Deferidas / Retificadas</span>
+            <div className="w-6 h-6 rounded-lg bg-emerald-950/60 border border-emerald-500/40 flex items-center justify-center">
+              <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />
             </div>
           </div>
-          <div className="font-data-mono text-3xl font-bold text-emerald-700">{deferidas}</div>
-          <div className="text-[11px] text-emerald-700 font-mono font-medium">Notas ajustadas</div>
+          <div className="font-data-mono text-3xl font-bold text-emerald-400">{deferidas}</div>
+          <div className="text-[11px] text-emerald-400/90 font-mono font-medium">Notas ajustadas</div>
         </div>
 
-        <div className="executive-card rounded-2xl p-5 flex flex-col justify-between h-28 shadow-card border border-slate-200/90">
+        <div className="bg-[rgba(24,34,21,0.72)] backdrop-blur-xl border border-white/[0.08] rounded-2xl p-5 flex flex-col justify-between h-28 shadow-[0_8px_24px_rgba(0,0,0,0.35)]">
           <div className="flex justify-between items-start">
-            <span className="text-[11px] font-semibold text-slate-500 uppercase">Indeferidas</span>
-            <div className="w-6 h-6 rounded-lg bg-rose-50 border border-rose-200 flex items-center justify-center">
-              <XCircle className="w-3.5 h-3.5 text-rose-500" />
+            <span className="text-[11px] font-semibold text-[#8FA39A] uppercase">Indeferidas</span>
+            <div className="w-6 h-6 rounded-lg bg-rose-950/60 border border-rose-500/40 flex items-center justify-center">
+              <XCircle className="w-3.5 h-3.5 text-rose-400" />
             </div>
           </div>
-          <div className="font-data-mono text-3xl font-bold text-rose-600">{indeferidas}</div>
-          <div className="text-[11px] text-rose-600 font-mono font-medium">Mantida a nota original</div>
+          <div className="font-data-mono text-3xl font-bold text-rose-400">{indeferidas}</div>
+          <div className="text-[11px] text-rose-400/90 font-mono font-medium">Mantida a nota original</div>
         </div>
       </div>
 

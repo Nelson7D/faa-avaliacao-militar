@@ -71,22 +71,22 @@ export default function MilitarDossieClient({ nip }: { nip: string }) {
   // Subordinado não tem permissão para consultar dossiê de superior
   if (!canConsultarMilitar(profile, militar)) {
     return (
-      <div className="max-w-xl mx-auto my-12 p-8 bg-white border border-rose-200 rounded-2xl shadow-card text-center space-y-4 animate-in fade-in">
-        <div className="inline-flex p-3 bg-rose-50 rounded-full text-rose-700 border border-rose-200">
+      <div className="max-w-xl mx-auto my-12 p-8 bg-[rgba(24,34,21,0.85)] border border-rose-500/40 rounded-2xl shadow-[0_12px_40px_rgba(0,0,0,0.5)] backdrop-blur-xl text-center space-y-4 animate-in fade-in">
+        <div className="inline-flex p-3 bg-rose-950/60 rounded-full text-rose-400 border border-rose-500/30">
           <ShieldAlert className="w-8 h-8" />
         </div>
-        <h2 className="text-base font-bold text-slate-900 uppercase tracking-tight">
+        <h2 className="text-base font-bold text-slate-100 uppercase tracking-tight">
           Acesso Negado • Violação da Hierarquia Militar
         </h2>
-        <p className="text-xs text-slate-600 leading-relaxed">
+        <p className="text-xs text-[#C5D4BD] leading-relaxed">
           Em conformidade com o <strong>Princípio da Hierarquia Militar das FAA</strong>, o superior hierárquico tem acesso aos seus subordinados para efeitos funcionais e de avaliação, mas o subordinado não possui autorização para consultar dados cadastrais ou avaliações do seu superior hierárquico.
         </p>
-        <p className="text-[11px] font-mono text-slate-500 bg-slate-50 p-2.5 rounded-lg border border-slate-200">
+        <p className="text-[11px] font-mono text-[#9EAF94] bg-[rgba(12,18,11,0.9)] p-2.5 rounded-lg border border-[#758652]/30">
           Utilizador Atual: {profile?.posto} {profile?.nomeGuerra || profile?.nomeCompleto} • Alvo: {militar.posto} {militar.nomeCompleto}
         </p>
         <div className="pt-2">
           <Link href={profile?.role === 'MILITAR_AVALIADO' ? '/minha-fai' : '/militares'}>
-            <Button size="sm" className="text-xs bg-[#0F3323] hover:bg-[#184A34] text-white">
+            <Button size="sm" className="text-xs bg-[#13281B] hover:bg-[#1A3826] border border-[#758652]/80 text-[#D4AF37]">
               Voltar aos Registos Autorizados
             </Button>
           </Link>
@@ -98,12 +98,12 @@ export default function MilitarDossieClient({ nip }: { nip: string }) {
   return (
     <div className="space-y-6">
       {/* Breadcrumb Header */}
-      <div className="flex items-center gap-2 text-muted-foreground text-xs uppercase font-mono pb-2 border-b border-border">
-        <Link href="/militares" className="hover:text-primary transition-colors">
+      <div className="flex items-center gap-2 text-[#9EAF94] text-xs uppercase font-mono pb-2 border-b border-[#758652]/20">
+        <Link href="/militares" className="hover:text-[#D4AF37] transition-colors">
           Processos Individuais
         </Link>
         <span>&gt;</span>
-        <span className="text-primary font-bold">Dossiê Executivo (NIP {nip})</span>
+        <span className="text-[#D4AF37] font-bold">Dossiê Executivo (NIP {nip})</span>
       </div>
 
       {/* Header Profile Card */}
@@ -111,14 +111,14 @@ export default function MilitarDossieClient({ nip }: { nip: string }) {
 
       {/* 3 Main Tabs */}
       <Tabs defaultValue="matricula" className="w-full">
-        <TabsList className="bg-white px-2 rounded-t border border-border">
-          <TabsTrigger value="matricula" icon={<FileText className="w-4 h-4 text-primary" />}>
+        <TabsList className="bg-[rgba(24,34,21,0.72)] backdrop-blur-xl px-2 py-1 rounded-xl border border-white/[0.08] shadow-[0_4px_16px_rgba(0,0,0,0.3)]">
+          <TabsTrigger value="matricula" icon={<FileText className="w-4 h-4 text-[#D4AF37]" />}>
             Folha de Matrícula
           </TabsTrigger>
-          <TabsTrigger value="historico" icon={<History className="w-4 h-4 text-primary" />}>
+          <TabsTrigger value="historico" icon={<History className="w-4 h-4 text-[#D4AF37]" />}>
             Histórico das FAIs ({fais.length})
           </TabsTrigger>
-          <TabsTrigger value="promocoes" icon={<Award className="w-4 h-4 text-[#B89047]" />}>
+          <TabsTrigger value="promocoes" icon={<Award className="w-4 h-4 text-[#D4AF37]" />}>
             Carreira & Promoções
           </TabsTrigger>
         </TabsList>

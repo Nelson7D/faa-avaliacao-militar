@@ -58,18 +58,18 @@ export function PipelineWorkflowWidget({
   const total = fais.length;
 
   return (
-    <div className="bg-white border border-slate-200/90 rounded-2xl p-4 sm:p-5 shadow-card space-y-4">
+    <div className="bg-[rgba(24,34,21,0.72)] backdrop-blur-xl border border-white/[0.08] rounded-2xl p-4 sm:p-5 shadow-[0_8px_32px_rgba(0,0,0,0.37)] space-y-4">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
         <div className="flex items-center gap-2 flex-wrap">
-          <span className="w-2.5 h-2.5 rounded-full bg-[#B89047]"></span>
-          <h3 className="font-bold text-xs text-slate-900 uppercase font-mono tracking-wider">
+          <span className="w-2 h-2 rounded-full bg-[#D4AF37] shadow-[0_0_8px_rgba(212,175,55,0.6)]"></span>
+          <h3 className="font-bold text-xs text-slate-100 uppercase font-mono tracking-wider">
             PIPELINE REGIMENTAL DE TRAMITAÇÃO (CICLO 30 DIAS)
           </h3>
           {selectedEtapa && (
             <button
               type="button"
               onClick={() => onSelectEtapa?.(selectedEtapa)}
-              className="text-[10.5px] font-mono px-2 py-0.5 rounded-full bg-slate-100 text-slate-700 hover:bg-slate-200 border border-slate-300 flex items-center gap-1 transition-colors"
+              className="text-[10.5px] font-mono px-2 py-0.5 rounded-full bg-[#13281B] text-[#D4AF37] hover:bg-[#1A3826] border border-[#D4AF37]/40 flex items-center gap-1 transition-colors cursor-pointer"
               title="Clique para limpar o filtro de etapa"
             >
               Filtro Ativo: <strong>{selectedEtapa}</strong> ✕
@@ -78,7 +78,7 @@ export function PipelineWorkflowWidget({
         </div>
         <Link
           href="/workflow"
-          className="text-xs font-bold text-[#0F3323] hover:text-[#184A34] flex items-center gap-1 hover:underline"
+          className="text-xs font-bold text-[#D4AF37] hover:text-[#FDE68A] flex items-center gap-1 hover:underline transition-colors"
         >
           Ver Quadro Completo de Tramitação <ArrowRight className="w-3.5 h-3.5" />
         </Link>
@@ -100,36 +100,36 @@ export function PipelineWorkflowWidget({
               onClick={() => onSelectEtapa?.(etapa.key)}
               className={`p-3 rounded-xl border text-left transition-all relative cursor-pointer group ${
                 isSelected
-                  ? 'bg-slate-100/90 border-[#0F3323] ring-2 ring-[#0F3323]/20 shadow-xs'
+                  ? 'bg-[rgba(32,46,28,0.9)] border-[#D4AF37] ring-2 ring-[#D4AF37]/30 shadow-lg'
                   : isActive
-                  ? 'bg-slate-50/70 border-slate-200/90 hover:border-slate-300 shadow-2xs'
-                  : 'bg-white/60 border-slate-100 opacity-60 hover:opacity-100'
+                  ? 'bg-[rgba(18,26,16,0.75)] border-[#758652]/40 hover:border-[#D4AF37]/40 hover:bg-[rgba(26,38,24,0.85)] shadow-xs'
+                  : 'bg-[rgba(15,22,14,0.5)] border-white/[0.04] opacity-60 hover:opacity-100'
               }`}
             >
-              <div className="flex items-center justify-between text-[10px] font-mono font-bold text-slate-400 mb-1">
-                <span className="flex items-center gap-1">
+              <div className="flex items-center justify-between text-[10px] font-mono font-bold text-[#8FA39A] mb-1">
+                <span className="flex items-center gap-1.5">
                   <span className={`w-1.5 h-1.5 rounded-full ${etapa.dot}`} />
                   0{idx + 1}
                 </span>
                 {isDone ? (
-                  <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
+                  <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />
                 ) : count > 0 ? (
-                  <Clock className="w-3.5 h-3.5 text-slate-700" />
+                  <Clock className="w-3.5 h-3.5 text-[#D4AF37]" />
                 ) : null}
               </div>
 
-              <div className="font-bold text-xs text-slate-900 leading-tight">
+              <div className="font-bold text-xs text-slate-100 leading-tight">
                 {etapa.label}
               </div>
-              <div className="text-[10px] text-slate-500 truncate mb-2">
+              <div className="text-[10px] text-[#9EAF94] truncate mb-2">
                 {etapa.short}
               </div>
 
-              <div className="flex items-baseline justify-between border-t border-slate-200/60 pt-1.5">
-                <span className="font-data-mono font-bold text-sm text-slate-900">
+              <div className="flex items-baseline justify-between border-t border-[#758652]/20 pt-1.5">
+                <span className="font-data-mono font-bold text-sm text-[#D4AF37]">
                   {count}
                 </span>
-                <span className="text-[10px] font-mono text-slate-500 font-medium">
+                <span className="text-[10px] font-mono text-[#8FA39A] font-medium">
                   {percent}%
                 </span>
               </div>

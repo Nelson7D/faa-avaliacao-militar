@@ -54,38 +54,38 @@ export function TacticalKPICard({
   const style = accentStyles[accentColor] || accentStyles.default;
 
   return (
-    <div className="executive-card rounded-xl p-5 flex flex-col justify-between min-h-[140px] relative overflow-hidden group">
+    <div className="bg-[rgba(24,34,21,0.72)] backdrop-blur-xl border border-white/[0.08] hover:border-[#D4AF37]/35 rounded-2xl p-5 flex flex-col justify-between min-h-[145px] relative overflow-hidden group shadow-[0_8px_24px_rgba(0,0,0,0.35)] transition-all duration-200">
       {/* Top Row: Title + Icon / Badge */}
       <div className="flex items-start justify-between gap-2">
         <div>
-          <span className="text-xs font-semibold text-slate-500 tracking-normal block">
+          <span className="text-xs font-medium text-[#C5D4BD] tracking-normal block">
             {title}
           </span>
         </div>
-        <div className={cn('w-9 h-9 rounded-lg flex items-center justify-center shrink-0 transition-transform duration-200 group-hover:scale-105', style.iconBg)}>
-          <Icon className="w-4 h-4" />
+        <div className="w-9 h-9 rounded-xl bg-[rgba(32,46,28,0.85)] border border-[#758652]/30 text-[#D4AF37] flex items-center justify-center shrink-0 transition-transform duration-200 group-hover:scale-105 shadow-xs">
+          <Icon className="w-4 h-4 text-[#D4AF37]" />
         </div>
       </div>
 
       {/* Metric Value */}
       <div className="my-2 flex items-baseline gap-2">
-        <span className="font-data-mono text-3xl font-bold tracking-tight text-slate-900">
+        <span className="font-data-mono text-3xl font-bold tracking-tight text-[#D4AF37] drop-shadow-[0_2px_4px_rgba(0,0,0,0.5)]">
           {value}
         </span>
         {subvalue && (
-          <span className="text-xs font-mono text-slate-500 font-medium">
+          <span className="text-xs font-mono text-[#9EAF94] font-medium">
             {subvalue}
           </span>
         )}
         {badge && (
-          <Badge variant={badgeVariantsMap[badge.variant] || 'secondary'} className="ml-auto text-[10px]">
+          <Badge variant={badgeVariantsMap[badge.variant] || 'secondary'} className="ml-auto text-[10px] bg-[#13281B] text-[#D4AF37] border-[#D4AF37]/40">
             {badge.text}
           </Badge>
         )}
       </div>
 
       {/* Bottom Subtitle / Context Note */}
-      <div className="pt-2 border-t border-slate-100 flex items-center justify-between text-xs text-slate-500">
+      <div className="pt-2 border-t border-[#758652]/20 flex items-center justify-between text-xs text-[#9EAF94]">
         <span className="leading-snug">{subtitle}</span>
       </div>
     </div>

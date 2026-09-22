@@ -343,23 +343,23 @@ export default function DashboardPage() {
   return (
     <div className="space-y-6">
       {/* Top Executive Banner & Fast Code Unlock Widget */}
-      <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center pb-4 border-b border-slate-200/80 gap-4">
+      <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center pb-4 border-b border-[#758652]/20 gap-4">
         <div>
-          <h2 className="text-xl font-bold text-slate-900 tracking-tight">
+          <h2 className="text-xl sm:text-2xl font-bold text-slate-100 tracking-tight">
             Dashboard de Prontidão e Gestão de Avaliações
           </h2>
-          <p className="text-xs text-slate-500 mt-1">
-            Monitorização operacional do ciclo anual de avaliação individual (FAI) • Exército Angolano
+          <p className="text-xs text-[#9EAF94] mt-1 font-medium">
+            Monitorização operacional do ciclo anual de avaliação individual (FAI) - Exército Angolano
           </p>
         </div>
 
-        {/* Quick Access by Individual Code (Distilled & Quieter) */}
-        <div className="w-full lg:w-auto bg-white p-2.5 sm:px-3 sm:py-2 rounded-xl shadow-xs border border-slate-200 flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5">
+        {/* Quick Access by Individual Code */}
+        <div className="w-full lg:w-auto bg-[rgba(24,34,21,0.72)] backdrop-blur-xl p-2 sm:px-3.5 sm:py-2 rounded-2xl shadow-[0_8px_24px_rgba(0,0,0,0.35)] border border-white/[0.08] flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5">
           <div className="flex items-center gap-2">
-            <div className="p-1 rounded-lg bg-slate-100 text-slate-700">
-              <KeyRound className="w-3.5 h-3.5 text-[#B89047]" />
+            <div className="p-1 rounded-lg bg-[rgba(16,24,15,0.8)] text-[#D4AF37] border border-[#758652]/30">
+              <KeyRound className="w-3.5 h-3.5 text-[#D4AF37]" />
             </div>
-            <span className="text-xs font-semibold text-slate-700 whitespace-nowrap">
+            <span className="text-xs font-semibold text-[#C5D4BD] whitespace-nowrap">
               Código DPQ:
             </span>
           </div>
@@ -371,7 +371,7 @@ export default function DashboardPage() {
                 placeholder="FAA-AV1-XXXX"
                 value={codigoQuick}
                 onChange={(e) => setCodigoQuick(e.target.value.toUpperCase())}
-                className="pl-2.5 pr-7 py-1 text-xs font-mono uppercase bg-slate-50 border border-slate-200 rounded-lg text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-[#B89047]/30 focus:border-[#B89047] w-36 transition-colors"
+                className="pl-2.5 pr-7 py-1 text-xs font-mono uppercase bg-[rgba(12,18,11,0.85)] border border-[#758652]/40 rounded-lg text-slate-100 placeholder:text-[#6C7D63] focus:outline-none focus:border-[#D4AF37] focus:ring-1 focus:ring-[#D4AF37] w-36 transition-colors"
               />
               <button
                 type="button"
@@ -382,7 +382,7 @@ export default function DashboardPage() {
                     if (text) setCodigoQuick(text.trim().toUpperCase());
                   } catch {}
                 }}
-                className="absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
+                className="absolute right-2 top-1/2 -translate-y-1/2 text-[#8FA39A] hover:text-[#D4AF37] cursor-pointer"
               >
                 <Clipboard className="w-3 h-3" />
               </button>
@@ -391,7 +391,7 @@ export default function DashboardPage() {
               type="submit"
               size="sm"
               disabled={validandoCodigo}
-              className="bg-[#0F3323] hover:bg-[#184A34] text-white font-medium text-xs px-3 h-7 rounded-lg shadow-2xs cursor-pointer"
+              className="bg-[#13281B] hover:bg-[#1A3826] border border-[#758652]/80 text-[#D4AF37] hover:text-[#FDE68A] font-medium text-xs px-3 h-7 rounded-lg shadow-xs cursor-pointer"
             >
               {validandoCodigo ? '...' : 'Aceder'}
             </Button>
@@ -400,9 +400,9 @@ export default function DashboardPage() {
       </div>
 
       {codigoError && (
-        <div className="p-3 bg-rose-50 border border-rose-200 rounded-xl text-xs font-mono text-rose-800 flex items-center justify-between">
+        <div className="p-3 bg-rose-950/80 border border-rose-500/50 rounded-xl text-xs font-mono text-rose-200 flex items-center justify-between">
           <span>{codigoError}</span>
-          <button onClick={() => setCodigoError('')} className="text-rose-500 font-bold">✕</button>
+          <button onClick={() => setCodigoError('')} className="text-rose-400 font-bold cursor-pointer">✕</button>
         </div>
       )}
 

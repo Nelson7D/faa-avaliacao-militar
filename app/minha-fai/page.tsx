@@ -102,24 +102,24 @@ export default function MinhaFaiPage() {
   return (
     <div className="space-y-6 pb-20">
       {/* Header Banner */}
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 pb-4 border-b border-slate-200/80">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 pb-4 border-b border-[#758652]/20">
         <div>
           <div className="flex items-center gap-2">
-            <h1 className="text-xl font-bold text-slate-900 tracking-tight">
+            <h1 className="text-xl sm:text-2xl font-bold text-slate-100 tracking-tight">
               Minha Ficha de Avaliação Individual (FAI)
             </h1>
             <Badge variant="fav" className="text-[10px] px-2.5">
               Ano {fai.anoInstrucao}
             </Badge>
           </div>
-          <p className="text-xs text-slate-500 mt-0.5">
+          <p className="text-xs text-[#9EAF94] mt-0.5 font-medium">
             {profile?.posto} {profile?.nomeCompleto} • NIP {profile?.nip} • {profile?.unidade}
           </p>
         </div>
 
         <div className="flex items-center gap-2">
           <Link href={`/militares/${profile?.nip || ''}`}>
-            <Button variant="outline" size="sm" className="text-xs flex items-center gap-1.5">
+            <Button size="sm" className="text-xs flex items-center gap-1.5 bg-[rgba(18,25,16,0.85)] border border-[#758652]/40 text-[#D4AF37] hover:bg-[rgba(24,34,21,0.95)]">
               <FolderLock className="w-3.5 h-3.5" /> Meu Dossiê
             </Button>
           </Link>

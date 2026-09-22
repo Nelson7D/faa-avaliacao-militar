@@ -99,14 +99,121 @@ h1, h2, h3, h4 {
   background-color: #F8FAFC;
 }
 
-/* Card Subtle Transition */
+/* Executive & Form Card (Diretiva Regimental: Superfície de alto contraste com fundo branco 94%) */
 .executive-card {
-  background: #FFFFFF;
-  border: 1px solid rgba(226, 232, 240, 0.85);
-  box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.03), 0 1px 2px -1px rgb(0 0 0 / 0.02);
+  background: rgba(255, 255, 255, 0.94);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(226, 232, 240, 0.95);
+  box-shadow: 0 8px 30px -4px rgba(0, 0, 0, 0.28);
   transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  color: #0F172A;
 }
 .executive-card:hover {
   border-color: rgba(203, 213, 225, 1);
-  box-shadow: 0 4px 12px -2px rgb(0 0 0 / 0.06), 0 2px 4px -2px rgb(0 0 0 / 0.03);
+  box-shadow: 0 12px 36px -4px rgba(0, 0, 0, 0.35);
 }
+
+/* =========================================================================
+   TACTICAL MILITARY DESIGN SYSTEM (FAI Digital v3.0)
+   ========================================================================= */
+
+/* Dark Frosted Glass Surface */
+.tactical-glass {
+  background: rgba(20, 28, 18, 0.75);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.tactical-glass-card {
+  background: rgba(24, 34, 21, 0.70);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.tactical-glass-card:hover {
+  background: rgba(28, 40, 25, 0.82);
+  border-color: rgba(212, 175, 55, 0.35);
+  box-shadow: 0 12px 36px 0 rgba(0, 0, 0, 0.45), 0 0 15px rgba(212, 175, 55, 0.15);
+}
+
+.tactical-glass-gold {
+  background: rgba(24, 34, 21, 0.75);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(212, 175, 55, 0.30);
+  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.40), inset 0 1px 0 rgba(212, 175, 55, 0.2);
+}
+
+/* High-Contrast Form Surface (Diretiva Regimental: Máxima legibilidade em formulários) */
+.form-surface-high-contrast {
+  background: rgba(255, 255, 255, 0.90) !important;
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(226, 232, 240, 0.95) !important;
+  color: #0F172A !important;
+  box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.25);
+}
+
+.form-surface-high-contrast input,
+.form-surface-high-contrast textarea,
+.form-surface-high-contrast select {
+  background: #FFFFFF !important;
+  color: #0F172A !important;
+  border-color: #CBD5E1 !important;
+}
+
+.form-surface-high-contrast label {
+  color: #1E293B !important;
+  font-weight: 600;
+}
+
+/* Tactical Input Fields (Modo Escuro Tático) */
+.tactical-input {
+  background: rgba(18, 25, 16, 0.75);
+  border: 1px solid rgba(117, 134, 82, 0.45);
+  color: #F8FAFC;
+  transition: all 0.15s ease-in-out;
+}
+.tactical-input:focus {
+  border-color: #D4AF37;
+  box-shadow: 0 0 0 1px #D4AF37, 0 0 12px rgba(212, 175, 55, 0.25);
+  outline: none;
+}
+.tactical-input::placeholder {
+  color: #6C7D63;
+}
+
+/* Radar Sweep Keyframe */
+@keyframes radar-sweep {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+.animate-radar-sweep {
+  animation: radar-sweep 12s linear infinite;
+}
+
+@keyframes pulse-slow {
+  0%, 100% {
+    opacity: 0.3;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.6;
+    transform: scale(1.04);
+  }
+}
+
+.animate-pulse-slow {
+  animation: pulse-slow 6s ease-in-out infinite;
+}
+

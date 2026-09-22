@@ -240,13 +240,13 @@ export default function AdminPage() {
   return (
     <div className="space-y-6">
       {/* Top Banner */}
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 pb-4 border-b border-slate-200/80">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 pb-4 border-b border-[#758652]/20">
         <div>
-          <h1 className="text-xl font-bold text-slate-900 tracking-tight flex items-center gap-2">
-            <ShieldCheck className="w-5 h-5 text-[#B89047]" />
+          <h1 className="text-xl sm:text-2xl font-bold text-slate-100 tracking-tight flex items-center gap-2">
+            <ShieldCheck className="w-5 h-5 text-[#D4AF37]" />
             Painel de Administração do Sistema FAA
           </h1>
-          <p className="text-xs text-slate-500 mt-0.5">
+          <p className="text-xs text-[#9EAF94] mt-0.5 font-medium">
             Gestão global de utilizadores, atribuição de funções regimentais, auditoria de segurança e parâmetros.
           </p>
         </div>
@@ -261,21 +261,21 @@ export default function AdminPage() {
 
       {/* Tabs */}
       <Tabs defaultValue="atribuicoes" className="space-y-6">
-        <TabsList className="bg-slate-100/80 p-1 rounded-xl border border-slate-200/80 w-full sm:w-auto flex flex-wrap">
+        <TabsList className="bg-[rgba(24,34,21,0.72)] backdrop-blur-xl p-1.5 rounded-xl border border-white/[0.08] shadow-[0_4px_16px_rgba(0,0,0,0.3)] w-full sm:w-auto flex flex-wrap gap-1">
           <TabsTrigger value="atribuicoes" className="text-xs flex items-center gap-1.5 rounded-lg font-medium">
-            <KeyRound className="w-3.5 h-3.5 text-[#B89047]" /> Atribuições & Códigos DPQ ({atribuicoes.length})
+            <KeyRound className="w-3.5 h-3.5 text-[#D4AF37]" /> Atribuições & Códigos DPQ ({atribuicoes.length})
           </TabsTrigger>
           <TabsTrigger value="users" className="text-xs flex items-center gap-1.5 rounded-lg font-medium">
-            <Users className="w-3.5 h-3.5" /> Gestão de Utilizadores & Papéis ({users.length})
+            <Users className="w-3.5 h-3.5 text-[#D4AF37]" /> Gestão de Utilizadores & Papéis ({users.length})
           </TabsTrigger>
           <TabsTrigger value="audit" className="text-xs flex items-center gap-1.5 rounded-lg font-medium">
-            <Clock className="w-3.5 h-3.5" /> Logs de Auditoria Geral ({logs.length})
+            <Clock className="w-3.5 h-3.5 text-[#D4AF37]" /> Logs de Auditoria Geral ({logs.length})
           </TabsTrigger>
           <TabsTrigger value="params" className="text-xs flex items-center gap-1.5 rounded-lg font-medium">
-            <Sliders className="w-3.5 h-3.5" /> Parâmetros Regimentais
+            <Sliders className="w-3.5 h-3.5 text-[#D4AF37]" /> Parâmetros Regimentais
           </TabsTrigger>
           <TabsTrigger value="infra" className="text-xs flex items-center gap-1.5 rounded-lg font-medium">
-            <Database className="w-3.5 h-3.5" /> Estado da Infraestrutura Firebase
+            <Database className="w-3.5 h-3.5 text-[#D4AF37]" /> Estado da Infraestrutura Firebase
           </TabsTrigger>
         </TabsList>
 

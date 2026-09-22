@@ -31,17 +31,17 @@ export function WorkflowKanbanColumn({
   const stageStyle = stageColorMap[etapaId] || stageColorMap.AVALIADOR_1;
 
   return (
-    <div className="flex-none w-[320px] flex flex-col bg-slate-100/70 border border-slate-200/80 rounded-2xl overflow-hidden shadow-subtle h-[calc(100vh-230px)] min-h-[520px]">
+    <div className="flex-none w-[320px] flex flex-col bg-[rgba(24,34,21,0.72)] backdrop-blur-xl border border-white/[0.08] rounded-2xl overflow-hidden shadow-[0_8px_24px_rgba(0,0,0,0.35)] h-[calc(100vh-230px)] min-h-[520px]">
       {/* Column Header */}
-      <div className={cn("p-4 border-b border-slate-200/80 backdrop-blur-xs flex justify-between items-center shrink-0 bg-white/80", stageStyle.bg)}>
+      <div className={cn("p-4 border-b border-white/[0.08] backdrop-blur-xs flex justify-between items-center shrink-0 bg-[rgba(12,18,11,0.85)]")}>
         <div>
           <div className="flex items-center gap-1.5">
             <span className={cn("w-2 h-2 rounded-full", stageStyle.dot)} />
-            <h3 className="font-bold text-xs text-slate-900 tracking-tight truncate">
+            <h3 className="font-bold text-xs text-slate-100 tracking-tight truncate">
               {config?.titulo || etapaId}
             </h3>
           </div>
-          <p className="text-[10.5px] text-slate-500 font-mono mt-0.5 pl-3.5">
+          <p className="text-[10.5px] text-[#9EAF94] font-mono mt-0.5 pl-3.5">
             Prazo: {config?.prazoDias || 5} Dias
           </p>
         </div>
@@ -53,7 +53,7 @@ export function WorkflowKanbanColumn({
       {/* Cards Scrollable Area */}
       <div className="flex-1 p-3 space-y-3 overflow-y-auto">
         {fais.length === 0 ? (
-          <div className="h-full flex items-center justify-center text-center p-6 text-xs text-slate-400 italic">
+          <div className="h-full flex items-center justify-center text-center p-6 text-xs text-[#6C7D63] italic">
             Nenhum processo nesta etapa.
           </div>
         ) : (

@@ -88,27 +88,27 @@ export default function WorkflowPage() {
   return (
     <div className="space-y-6">
       {/* Top Header */}
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 pb-4 border-b border-slate-200/80">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 pb-4 border-b border-[#758652]/20">
         <div>
           <div className="flex items-center gap-2">
-            <h2 className="text-xl font-bold text-slate-900 tracking-tight flex items-center gap-2">
-              <GitBranch className="w-5 h-5 text-primary" />
+            <h2 className="text-xl sm:text-2xl font-bold text-slate-100 tracking-tight flex items-center gap-2">
+              <GitBranch className="w-5 h-5 text-[#D4AF37]" />
               Central de Workflow & Tramitação Regimental
             </h2>
           </div>
-          <p className="text-xs text-slate-500 mt-1">
+          <p className="text-xs text-[#9EAF94] mt-1 font-medium">
             Monitorização estrita do ciclo de 30 dias (10d 1º Avaliador • 5d 2º Avaliador • 5d Cmdte • 5d Conselho ASC • 5d DPQ)
           </p>
         </div>
 
         {/* View Switcher */}
-        <div className="flex items-center bg-slate-100 p-1 rounded-xl border border-slate-200/80 shadow-2xs">
+        <div className="flex items-center bg-[rgba(12,18,11,0.85)] p-1 rounded-xl border border-[#758652]/40 shadow-2xs">
           <button
             onClick={() => setViewMode('kanban')}
             className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
               viewMode === 'kanban'
-                ? 'bg-white text-slate-900 shadow-xs font-semibold'
-                : 'text-slate-500 hover:text-slate-900'
+                ? 'bg-[#D4AF37] text-[#0D140B] shadow-xs font-bold'
+                : 'text-[#9EAF94] hover:text-slate-100'
             }`}
           >
             <LayoutGrid className="w-3.5 h-3.5" /> Quadro Kanban
@@ -117,8 +117,8 @@ export default function WorkflowPage() {
             onClick={() => setViewMode('table')}
             className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
               viewMode === 'table'
-                ? 'bg-white text-slate-900 shadow-xs font-semibold'
-                : 'text-slate-500 hover:text-slate-900'
+                ? 'bg-[#D4AF37] text-[#0D140B] shadow-xs font-bold'
+                : 'text-[#9EAF94] hover:text-slate-100'
             }`}
           >
             <TableIcon className="w-3.5 h-3.5" /> Tabela de Auditoria
@@ -127,38 +127,38 @@ export default function WorkflowPage() {
       </div>
 
       {/* Filter Bar */}
-      <div className="flex flex-wrap items-center gap-3 bg-white p-3.5 rounded-xl border border-slate-200/80 text-xs shadow-card">
+      <div className="flex flex-wrap items-center gap-3 bg-[rgba(24,34,21,0.72)] backdrop-blur-xl p-3.5 rounded-2xl border border-white/[0.08] text-xs shadow-[0_8px_24px_rgba(0,0,0,0.35)]">
         <div className="relative w-full sm:w-72">
-          <Search className="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+          <Search className="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-[#8FA39A]" />
           <input
             type="text"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             placeholder="Buscar por NIP, Posto ou Nome..."
-            className="w-full pl-9 pr-3 py-1.5 text-xs border border-slate-200 rounded-lg bg-slate-50 text-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
+            className="w-full pl-9 pr-3 py-1.5 text-xs border border-[#758652]/40 rounded-xl bg-[rgba(12,18,11,0.85)] text-slate-100 placeholder:text-[#6C7D63] focus:border-[#D4AF37] focus:outline-none focus:ring-1 focus:ring-[#D4AF37] transition-all"
           />
         </div>
 
         <select
           value={categoriaFilter}
           onChange={(e) => setCategoriaFilter(e.target.value)}
-          className="py-1.5 px-3 border border-slate-200 rounded-lg bg-white text-slate-800 text-xs font-medium focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all cursor-pointer shadow-2xs"
+          className="py-1.5 px-3 border border-[#758652]/40 rounded-xl bg-[rgba(12,18,11,0.85)] text-slate-100 text-xs font-medium focus:outline-none focus:border-[#D4AF37] transition-all cursor-pointer shadow-2xs"
         >
-          <option value="TODAS">Todas as Categorias</option>
-          <option value="OFICIAL">Oficiais</option>
-          <option value="SARGENTO">Sargentos</option>
-          <option value="PRACA">Praças</option>
+          <option value="TODAS" className="bg-[#10180F] text-slate-200">Todas as Categorias</option>
+          <option value="OFICIAL" className="bg-[#10180F] text-slate-200">Oficiais</option>
+          <option value="SARGENTO" className="bg-[#10180F] text-slate-200">Sargentos</option>
+          <option value="PRACA" className="bg-[#10180F] text-slate-200">Praças</option>
         </select>
 
         <select
           value={statusFilter}
           onChange={(e) => setStatusFilter(e.target.value)}
-          className="py-1.5 px-3 border border-slate-200 rounded-lg bg-white text-slate-800 text-xs font-medium focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all cursor-pointer shadow-2xs"
+          className="py-1.5 px-3 border border-[#758652]/40 rounded-xl bg-[rgba(12,18,11,0.85)] text-slate-100 text-xs font-medium focus:outline-none focus:border-[#D4AF37] transition-all cursor-pointer shadow-2xs"
         >
-          <option value="TODOS">Todos os Status de Prazo</option>
-          <option value="EM_DIA">Em Dia (&gt; 2 dias)</option>
-          <option value="ALERTA">Alerta Crítico (≤ 48h)</option>
-          <option value="ATRASADO">Fora do Prazo (Atrasado)</option>
+          <option value="TODOS" className="bg-[#10180F] text-slate-200">Todos os Status de Prazo</option>
+          <option value="EM_DIA" className="bg-[#10180F] text-slate-200">Em Dia (&gt; 2 dias)</option>
+          <option value="ALERTA" className="bg-[#10180F] text-slate-200">Alerta Crítico (≤ 48h)</option>
+          <option value="ATRASADO" className="bg-[#10180F] text-slate-200">Fora do Prazo (Atrasado)</option>
         </select>
 
         {(searchTerm || categoriaFilter !== 'TODAS' || statusFilter !== 'TODOS') && (
@@ -168,7 +168,7 @@ export default function WorkflowPage() {
               setCategoriaFilter('TODAS');
               setStatusFilter('TODOS');
             }}
-            className="text-xs text-primary font-medium hover:underline flex items-center gap-1 ml-auto"
+            className="text-xs text-[#D4AF37] font-medium hover:underline flex items-center gap-1 ml-auto"
           >
             <FilterX className="w-3.5 h-3.5" /> Limpar Filtros
           </button>

@@ -216,24 +216,24 @@ export default function FaiDetailClient({ faiId }: { faiId: string }) {
   const isMilitarAvaliado = profile?.role === 'MILITAR_AVALIADO';
 
   return (
-    <div className="space-y-6 pb-28">
+    <div className="space-y-6 pb-28 text-slate-100">
       {/* Top Action Bar */}
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 pb-4 border-b border-slate-200/80 no-print">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 pb-4 border-b border-[#758652]/20 no-print">
         <div className="flex items-center gap-3">
           <Link
             href="/dashboard"
-            className="p-2 border border-slate-200 rounded-xl bg-white hover:bg-slate-50 text-slate-600 transition-colors shadow-2xs"
+            className="p-2 border border-[#758652]/30 rounded-xl bg-[rgba(16,24,15,0.8)] hover:bg-[rgba(24,36,22,0.9)] text-[#D4AF37] transition-colors shadow-2xs"
           >
             <ChevronLeft className="w-4 h-4" />
           </Link>
           <div>
             <div className="flex items-center gap-2">
-              <h2 className="text-lg font-bold text-slate-900 font-mono tracking-tight">{fai.id}</h2>
-              <Badge variant="fav" className="text-[10px] px-2.5">
+              <h2 className="text-lg font-bold text-slate-100 font-mono tracking-tight">{fai.id}</h2>
+              <Badge variant="fav" className="text-[10px] px-2.5 bg-[#13281B] text-[#D4AF37] border-[#D4AF37]/40">
                 Etapa: {fai.workflow.etapaAtual}
               </Badge>
             </div>
-            <p className="text-xs text-slate-500 mt-0.5">
+            <p className="text-xs text-[#9EAF94] mt-0.5">
               {fai.militar ? `${fai.militar.posto} ${fai.militar.nomeCompleto}` : fai.militarNip} • Ano {fai.anoInstrucao}
             </p>
           </div>
@@ -245,7 +245,7 @@ export default function FaiDetailClient({ faiId }: { faiId: string }) {
               variant="gold"
               size="sm"
               onClick={() => setShowTramitarModal(true)}
-              className="text-xs flex items-center gap-1.5 shadow-xs"
+              className="text-xs flex items-center gap-1.5 shadow-xs bg-[#13281B] hover:bg-[#1A3826] border border-[#758652]/80 text-[#D4AF37] cursor-pointer"
             >
               <GitBranch className="w-3.5 h-3.5" /> Tramitar / Avançar
             </Button>
@@ -254,7 +254,7 @@ export default function FaiDetailClient({ faiId }: { faiId: string }) {
             variant="outline"
             size="sm"
             onClick={() => setShowPdfView(!showPdfView)}
-            className="text-xs"
+            className="text-xs border-[#758652]/40 bg-[rgba(16,24,15,0.7)] text-slate-200 hover:text-white hover:bg-white/5 cursor-pointer"
           >
             {showPdfView ? 'Ocultar PDF' : 'Ver Modo PDF'}
           </Button>
@@ -262,25 +262,25 @@ export default function FaiDetailClient({ faiId }: { faiId: string }) {
             variant="default"
             size="sm"
             onClick={handlePrintPdf}
-            className="text-xs flex items-center gap-1.5 shadow-xs"
+            className="text-xs flex items-center gap-1.5 shadow-xs bg-[#0F3323] hover:bg-[#184A34] text-white border border-[#D4AF37]/30 cursor-pointer"
           >
-            <Printer className="w-3.5 h-3.5" />
+            <Printer className="w-3.5 h-3.5 text-[#D4AF37]" />
             Exportar em PDF
           </Button>
         </div>
       </div>
 
       {saveSuccessMessage && (
-        <div className="p-3.5 bg-emerald-50 border border-emerald-200 rounded-xl text-xs text-emerald-950 font-semibold flex items-center gap-2 animate-in fade-in no-print shadow-2xs">
-          <CheckCircle2 className="w-4 h-4 text-emerald-700" />
+        <div className="p-3.5 bg-emerald-950/80 border border-emerald-500/50 rounded-xl text-xs text-emerald-200 font-semibold flex items-center gap-2 animate-in fade-in no-print shadow-2xs">
+          <CheckCircle2 className="w-4 h-4 text-emerald-400" />
           <span>{saveSuccessMessage}</span>
         </div>
       )}
 
       {saveErrorMessage && (
-        <div className="p-3.5 bg-rose-50 border border-rose-200 rounded-xl text-xs text-rose-950 font-semibold flex items-center justify-between gap-2 animate-in fade-in no-print shadow-2xs">
+        <div className="p-3.5 bg-rose-950/80 border border-rose-500/50 rounded-xl text-xs text-rose-200 font-semibold flex items-center justify-between gap-2 animate-in fade-in no-print shadow-2xs">
           <div className="flex items-center gap-2">
-            <AlertTriangle className="w-4 h-4 text-rose-600 shrink-0" />
+            <AlertTriangle className="w-4 h-4 text-rose-400 shrink-0" />
             <span>{saveErrorMessage}</span>
           </div>
           <button
@@ -295,30 +295,32 @@ export default function FaiDetailClient({ faiId }: { faiId: string }) {
 
       {/* Regimental Inconsistency Alert Banner */}
       {resultadoCalculo.incoerenciasDetectadas && resultadoCalculo.incoerenciasDetectadas.length > 0 && (
-        <div className="p-3.5 bg-amber-50 border border-amber-300 rounded-xl text-xs text-amber-950 space-y-1 shadow-2xs no-print">
-          <div className="flex items-center gap-2 font-bold text-amber-900">
-            <AlertTriangle className="w-4 h-4 text-amber-600 shrink-0" />
-            <span>Alerta do Motor de Coerência Regimental (Manual VII FAA):</span>
+        <div className="p-3.5 bg-amber-950/80 border border-amber-500/50 rounded-xl text-xs text-amber-200 space-y-1 shadow-2xs no-print">
+          <div className="flex items-center gap-2 font-bold text-amber-300">
+            <AlertTriangle className="w-4 h-4 text-amber-400 shrink-0" />
+            <span>Incoerências Regimentais Detetadas</span>
           </div>
-          {resultadoCalculo.incoerenciasDetectadas.map((inc, i) => (
-            <p key={i} className="pl-6 text-[11.5px] text-amber-800">• {inc}</p>
-          ))}
+          <ul className="list-disc pl-5 space-y-0.5 text-[11px] text-amber-200">
+            {resultadoCalculo.incoerenciasDetectadas.map((inc, i) => (
+              <li key={i}>{inc}</li>
+            ))}
+          </ul>
         </div>
       )}
 
-      {/* Conditional: Show Printable PDF View or Form Canvas */}
       {showPdfView ? (
-        <div>
-          <div className="no-print bg-amber-50 border border-amber-200 p-3.5 rounded-xl text-xs text-amber-900 mb-4 flex justify-between items-center">
-            <span>Visualização da Ficha de Avaliação Individual em formato A4 Oficial com marca d'água regimental.</span>
-            <Button size="sm" variant="outline" onClick={() => setShowPdfView(false)}>
+        <div className="space-y-4">
+          <div className="flex justify-between items-center bg-[rgba(16,24,15,0.8)] border border-[#758652]/30 p-3 rounded-xl no-print">
+            <span className="text-xs font-semibold text-[#D4AF37]">Modo de Pré-visualização de Impressão Oficial</span>
+            <Button size="sm" variant="outline" onClick={() => setShowPdfView(false)} className="text-xs border-[#758652]/40 text-slate-200">
               Voltar ao Formulário
             </Button>
           </div>
           <FaiPdfView fai={{ ...fai, mediaPonderada: resultadoCalculo.MP, classificacao: resultadoCalculo.classificacao }} />
         </div>
       ) : (
-        <div className="executive-card rounded-2xl overflow-hidden shadow-card">
+        /* High-Contrast Form Container (Diretiva: Fundo branco de alta densidade para máxima legibilidade nos 16 fatores) */
+        <div className="bg-[rgba(255,255,255,0.92)] backdrop-blur-2xl rounded-2xl overflow-hidden shadow-[0_16px_40px_rgba(0,0,0,0.5)] border border-slate-200/90 text-slate-900">
           {/* Stepper Header */}
           <FaiHeaderStepper activeStep={activeStep} onStepClick={setActiveStep} />
 

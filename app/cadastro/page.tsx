@@ -7,6 +7,7 @@ import { Shield, ArrowRight, AlertCircle, CheckCircle2, User, Hash, Lock, Buildi
 import { useAuth } from '@/context/auth-context';
 import { Button } from '@/components/ui/button';
 import { POSTOS_MILITARES } from '@/lib/constants';
+import { TacticalBackground } from '@/components/ui/tactical-background';
 
 export default function CadastroPage() {
   const router = useRouter();
@@ -65,28 +66,31 @@ export default function CadastroPage() {
   };
 
   return (
-    <div className="min-h-screen bg-[#F8FAFC] text-slate-900 flex flex-col justify-center items-center p-4 py-8 relative select-none">
-      {/* Subtle brand ambient accents */}
-      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[600px] h-[300px] bg-gradient-to-b from-[#0F3323]/5 to-transparent rounded-full blur-3xl pointer-events-none" />
+    <div className="min-h-screen relative flex flex-col justify-center items-center p-4 py-8 select-none text-slate-100 overflow-hidden">
+      {/* Animated Tactical Background (Radar + Polygonal Shields) */}
+      <TacticalBackground variant="login" />
 
       <div className="w-full max-w-lg space-y-6 z-10">
         {/* Minimalist Header */}
-        <div className="text-center space-y-2">
-          <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-gradient-to-br from-[#D4AF37] via-[#B89047] to-[#8C6B26] p-0.5 shadow-md mb-1">
-            <div className="w-full h-full bg-[#0F3323] rounded-[14px] flex items-center justify-center">
-              <Shield className="w-7 h-7 text-[#D4AF37]" />
+        <div className="text-center space-y-2.5">
+          <div className="inline-flex flex-col items-center justify-center relative mb-1">
+            <div className="w-14 h-16 bg-gradient-to-b from-[#182618] to-[#0A1108] border-2 border-[#D4AF37] rounded-b-2xl rounded-t-sm shadow-[0_0_20px_rgba(212,175,55,0.3)] flex flex-col items-center justify-center p-2 relative overflow-hidden">
+              <span className="text-[10px] font-black tracking-widest text-[#D4AF37] border-b border-[#D4AF37]/40 w-full text-center pb-0.5 mb-1 font-mono">
+                FAA
+              </span>
+              <Shield className="w-6 h-6 text-[#D4AF37]" />
             </div>
           </div>
-          <h1 className="text-xl font-bold tracking-tight text-[#0F3323] uppercase">
+          <h1 className="text-2xl font-black tracking-wider text-transparent bg-clip-text bg-gradient-to-r from-[#FDE68A] via-[#D4AF37] to-[#B89047] uppercase drop-shadow-[0_2px_8px_rgba(0,0,0,0.6)]">
             SISTEMA FAA
           </h1>
-          <p className="text-xs text-slate-500 font-medium">
-            Cadastro de Militar
+          <p className="text-xs text-[#9EAF94] font-medium tracking-tight">
+            Registo de Novo Militar • Folha de Matrícula Oficial
           </p>
         </div>
 
-        {/* Clean White Card */}
-        <div className="bg-white border border-slate-200/80 rounded-2xl p-6 sm:p-8 shadow-xl space-y-4">
+        {/* High-Contrast Tactical Form Card */}
+        <div className="bg-[rgba(255,255,255,0.92)] backdrop-blur-xl border border-slate-200 rounded-2xl p-6 sm:p-8 shadow-[0_16px_40px_rgba(0,0,0,0.5)] space-y-4 text-slate-900">
           {profile && !isAuthorized ? (
             <div className="text-center py-6 space-y-4">
               <div className="inline-flex p-3 bg-amber-50 rounded-full text-amber-800 border border-amber-200">
@@ -251,9 +255,9 @@ export default function CadastroPage() {
         </div>
 
         {/* Minimalist Switch Link */}
-        <div className="text-center text-xs text-slate-500">
+        <div className="text-center text-xs text-[#9EAF94]">
           Já tem conta?{' '}
-          <Link href="/login" className="text-[#B89047] font-semibold hover:underline">
+          <Link href="/login" className="text-[#D4AF37] font-semibold hover:underline">
             Entrar no Sistema
           </Link>
         </div>

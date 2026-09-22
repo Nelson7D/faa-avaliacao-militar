@@ -229,17 +229,17 @@ export default function NovaFaiPage() {
   return (
     <div className="space-y-6 pb-28">
       {/* Top Banner */}
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 pb-4 border-b border-slate-200/80">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 pb-4 border-b border-[#758652]/20">
         <div className="flex items-center gap-3">
           <Link
             href="/dashboard"
-            className="p-2 border border-slate-200 rounded-xl bg-white hover:bg-slate-50 text-slate-600 transition-colors shadow-2xs"
+            className="p-2 border border-[#758652]/40 rounded-xl bg-[rgba(18,25,16,0.85)] hover:bg-[rgba(24,34,21,0.95)] text-[#D4AF37] transition-colors shadow-2xs"
           >
             <ChevronLeft className="w-4 h-4" />
           </Link>
           <div>
-            <h2 className="text-lg font-bold text-slate-900 uppercase tracking-tight">Criar Nova FAI Digital</h2>
-            <p className="text-xs text-slate-500 mt-0.5">
+            <h2 className="text-lg font-bold text-slate-100 uppercase tracking-tight">Criar Nova FAI Digital</h2>
+            <p className="text-xs text-[#9EAF94] mt-0.5 font-medium">
               Abertura oficial do processo de avaliação individual (Manual VII FAA • 12 Blocos Regimentais)
             </p>
           </div>
@@ -247,7 +247,7 @@ export default function NovaFaiPage() {
 
         {/* Quick Militar Selector */}
         <div className="flex items-center gap-2">
-          <label className="text-xs font-semibold text-slate-600 uppercase hidden sm:block">
+          <label className="text-xs font-semibold text-[#C5D4BD] uppercase hidden sm:block">
             Preencher Praça:
           </label>
           <select
@@ -258,11 +258,11 @@ export default function NovaFaiPage() {
               }
             }}
             value={selectedMilitar.nip || ''}
-            className="py-1.5 px-3 text-xs border border-slate-200 rounded-xl bg-white text-slate-900 focus:outline-none focus:ring-2 focus:ring-primary/20 shadow-2xs cursor-pointer font-medium"
+            className="py-1.5 px-3 text-xs border border-[#758652]/40 rounded-xl bg-[rgba(12,18,11,0.85)] text-slate-100 focus:outline-none focus:border-[#D4AF37] shadow-2xs cursor-pointer font-medium"
           >
-            <option value="">Selecione a Praça cadastrada...</option>
+            <option value="" className="bg-[#10180F] text-slate-200">Selecione a Praça cadastrada...</option>
             {militares.map((mil) => (
-              <option key={mil.nip} value={mil.nip}>
+              <option key={mil.nip} value={mil.nip} className="bg-[#10180F] text-slate-200">
                 {mil.posto} {mil.nomeCompleto} (NIP {mil.nip})
               </option>
             ))}

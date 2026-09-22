@@ -64,51 +64,50 @@ export function TopNavbar({ onOpenMobileMenu }: TopNavbarProps) {
   const activeRoleBadge = profile ? getRoleBadge(profile.role) : null;
 
   return (
-    <header className="h-16 bg-white border-b border-slate-200/80 sticky top-0 z-30 px-6 sm:px-8 flex items-center justify-between">
+    <header className="h-16 bg-[rgba(13,19,12,0.65)] backdrop-blur-xl border-b border-[#758652]/20 sticky top-0 z-30 px-6 sm:px-8 flex items-center justify-between text-slate-100">
       {/* Left: Hamburger (Mobile) & Clock */}
       <div className="flex items-center gap-3">
         {onOpenMobileMenu && (
           <button
             type="button"
             onClick={onOpenMobileMenu}
-            className="md:hidden p-2 rounded-xl text-slate-600 hover:text-slate-900 hover:bg-slate-100 border border-slate-200 transition-colors cursor-pointer"
+            className="md:hidden p-2 rounded-xl text-[#9EAF94] hover:text-white hover:bg-white/10 border border-[#758652]/30 transition-colors cursor-pointer"
             aria-label="Abrir menu de navegação"
           >
             <Menu className="w-4 h-4" />
           </button>
         )}
-        <div className="flex items-center gap-2 text-xs font-mono text-slate-600 bg-slate-100/70 px-3 py-1.5 rounded-lg border border-slate-200/70">
-          <Clock className="w-3.5 h-3.5 text-[#B89047]" />
-          <span className="font-semibold text-slate-900 tracking-tight">{timeString || '12:00:00'}</span>
-          <span className="text-[10px] text-slate-500 uppercase font-sans font-medium">WAT (Luanda)</span>
+        <div className="flex items-center gap-2 text-xs font-mono text-slate-200 bg-[rgba(24,36,22,0.7)] px-3.5 py-1.5 rounded-xl border border-[#758652]/35 shadow-xs">
+          <Clock className="w-3.5 h-3.5 text-[#D4AF37]" />
+          <span className="font-bold text-slate-100 tracking-tight">{timeString || '18:00:00'}</span>
+          <span className="text-[10px] text-[#D4AF37] uppercase font-sans font-semibold">WAT (LUANDA)</span>
         </div>
       </div>
 
       {/* Right: Officer Profile */}
       <div className="flex items-center gap-3">
-
         {/* Officer Profile Badge */}
         {profile ? (
           <div className="flex items-center gap-2.5 pl-1 select-none">
-            <div className="w-9 h-9 rounded-full bg-gradient-to-tr from-[#0F3323] to-[#1E523A] text-[#D4AF37] flex items-center justify-center font-bold text-xs font-mono border border-primary/20 shadow-xs">
+            <div className="w-9 h-9 rounded-full bg-[#183624] text-emerald-400 flex items-center justify-center font-bold text-xs font-mono border border-emerald-500/40 shadow-xs">
               {getInitials(profile.nomeCompleto)}
             </div>
-            <div className="hidden xl:block text-left">
-              <div className="text-xs font-semibold text-slate-800 leading-tight">
+            <div className="hidden sm:block text-left">
+              <div className="text-xs font-bold text-slate-100 leading-tight">
                 {profile.posto} {profile.nomeGuerra}
               </div>
-              <div className="text-[10px] text-slate-500 leading-tight font-mono mt-0.5">
+              <div className="text-[10px] text-[#9EAF94] leading-tight font-mono mt-0.5">
                 NIP {profile.nip} • {profile.role}
               </div>
             </div>
           </div>
         ) : (
           <div className="flex items-center gap-2 pl-1 select-none">
-            <div className="w-9 h-9 rounded-full bg-slate-200 flex items-center justify-center text-xs font-mono text-slate-500">
+            <div className="w-9 h-9 rounded-full bg-[rgba(24,36,22,0.7)] border border-[#758652]/30 flex items-center justify-center text-xs font-mono text-[#9EAF94]">
               --
             </div>
-            <div className="hidden xl:block text-left">
-              <div className="text-xs text-slate-500">Não autenticado</div>
+            <div className="hidden sm:block text-left">
+              <div className="text-xs text-[#9EAF94]">Não autenticado</div>
             </div>
           </div>
         )}
