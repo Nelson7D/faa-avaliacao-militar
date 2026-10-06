@@ -87,10 +87,11 @@ export function canConsultarMilitar(
 }
 
 /**
- * Ponto 1 e Ponto 3: Regra de Elegibilidade para Avaliação
- * - Apenas Praças podem ser avaliadas no sistema.
- * - Chefe da DPQ: por regra NÃO avalia, salvo subordinados diretos da sua própria secção/órgão.
- * - 1º Avaliador / Comandante: apenas subordinados diretos da cadeia funcional.
+ * Regra de Elegibilidade para Avaliação (Regulamento das FAA):
+ * - Oficiais, Sargentos e Praças são elegíveis para avaliação regimental.
+ * - O avaliador deve ser estritamente superior hierárquico ao militar avaliado.
+ * - Não é permitida auto-avaliação.
+ * - Chefe da DPQ: por regra gere o efetivo e audita processos; apenas avalia subordinados diretos da sua própria secção/órgão.
  */
 export function canAvaliarMilitar(
   avaliador: (Pick<UserProfile, 'role' | 'nip' | 'posto' | 'unidade'> & { orgao?: string }) | null | undefined,
@@ -98,10 +99,7 @@ export function canAvaliarMilitar(
 ): boolean {
   if (!avaliador) return false;
 
-  // 1. Apenas militares da categoria Praça são elegíveis para avaliação regimental
-  if (militarAlvo.categoria !== 'PRACA') return false;
-
-  // 2. Não pode auto-avaliar-se
+  // 1. Não pode auto-avaliar-se
   if (avaliador.nip === militarAlvo.nip) return false;
 
   // 3. ADMIN pode testar/gerir o sistema

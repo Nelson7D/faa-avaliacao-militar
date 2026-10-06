@@ -8,6 +8,7 @@ import {
   FileText,
   GitBranch,
   FolderLock,
+  FolderArchive,
   Scale,
   Brain,
   Shield,
@@ -64,6 +65,13 @@ export const NAV_ITEMS: NavItemDef[] = [
     sublabel: 'Dossiês & Folha Matrícula',
     href: '/militares',
     icon: FolderLock,
+    roles: ['ADMIN', 'DPQ', 'CMDTE', 'AVALIADOR_1', 'AVALIADOR_2'],
+  },
+  {
+    label: 'Arquivo por Ano',
+    sublabel: 'Pastas Cronológicas FAI',
+    href: '/arquivo',
+    icon: FolderArchive,
     roles: ['ADMIN', 'DPQ', 'CMDTE', 'AVALIADOR_1', 'AVALIADOR_2'],
   },
   {

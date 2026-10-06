@@ -144,3 +144,5 @@ export interface FaiDocument {
   createdAt: string;
   updatedAt: string;
 }
+
+export type FaiWorkflow = FaiDocument['workflow'];

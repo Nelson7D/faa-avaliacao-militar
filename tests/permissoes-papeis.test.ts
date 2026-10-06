@@ -22,7 +22,7 @@ describe('Controlo de Acesso Baseado em Papéis Militares (RBAC FAA)', () => {
   });
 
   it('MILITAR_AVALIADO: Não possui permissão para avaliar outros militares nem acessar o painel de administração', () => {
-    const role: UserProfile['role'] = 'MILITAR_AVALIADO';
+    const role: string = 'MILITAR_AVALIADO';
     const evaluatorOnlyRoutes = ['/fai/nova', '/admin', '/ia-analytics'];
 
     evaluatorOnlyRoutes.forEach((route) => {
@@ -36,7 +36,7 @@ describe('Controlo de Acesso Baseado em Papéis Militares (RBAC FAA)', () => {
   });
 
   it('AVALIADOR_1: Permissão exclusiva para preencher Bloco 03 (Coluna 1º Avaliador) e Bloco 05', () => {
-    const role: UserProfile['role'] = 'AVALIADOR_1';
+    const role: string = 'AVALIADOR_1';
 
     const canEditAval1 = role === 'AVALIADOR_1' || role === 'ADMIN';
     const canEditAval2 = role === 'AVALIADOR_2';
@@ -48,7 +48,7 @@ describe('Controlo de Acesso Baseado em Papéis Militares (RBAC FAA)', () => {
   });
 
   it('AVALIADOR_2: Permissão exclusiva para ratificar ou discordar no Bloco 03 e Bloco 06', () => {
-    const role: UserProfile['role'] = 'AVALIADOR_2';
+    const role: string = 'AVALIADOR_2';
 
     const canEditAval2 = role === 'AVALIADOR_2' || role === 'ADMIN';
     const canEditCmdte = role === 'CMDTE';

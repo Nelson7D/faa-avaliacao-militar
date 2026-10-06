@@ -64,9 +64,13 @@ export function FaiPdfView({ fai }: { fai: FaiDocument }) {
               <span className="text-[9px] text-gray-600 block uppercase font-bold">Quadro Orgânico:</span>
               <span className="font-bold">{m?.qe || 'QP'}</span>
             </div>
-            <div className="p-1.5 col-span-4">
+            <div className="p-1.5 col-span-3">
               <span className="text-[9px] text-gray-600 block uppercase font-bold">Função Desempenhada:</span>
               <span>{m?.funcaoDesempenhada || '-'}</span>
+            </div>
+            <div className="p-1.5 col-span-1">
+              <span className="text-[9px] text-gray-600 block uppercase font-bold">Tempo de Serviço:</span>
+              <span className="font-mono font-bold">{m?.tempoServicoAnos || 0} anos</span>
             </div>
           </div>
         </div>

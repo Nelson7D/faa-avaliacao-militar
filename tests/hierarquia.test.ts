@@ -217,13 +217,13 @@ describe('Conformidade Hierárquica e Regimental FAA', () => {
       role: 'AVALIADOR_1',
     };
 
-    it('Pode avaliar praça subordinada direta', () => {
+    it('Pode avaliar subordinados diretos (Praças e Oficiais subalternos)', () => {
       expect(canAvaliarMilitar(userAval1, soldadoKiala)).toBe(true);
       expect(canAvaliarMilitar(userAval1, caboManuel)).toBe(true);
+      expect(canAvaliarMilitar(userAval1, tenenteGomes)).toBe(true); // Capitão é superior a Tenente
     });
 
-    it('NÃO pode avaliar outro oficial ou superior', () => {
-      expect(canAvaliarMilitar(userAval1, tenenteGomes)).toBe(false); // Tenente é oficial (apenas Praças são avaliadas)
+    it('NÃO pode avaliar superior hierárquico (Major)', () => {
       expect(canAvaliarMilitar(userAval1, majorSilva)).toBe(false);
     });
   });

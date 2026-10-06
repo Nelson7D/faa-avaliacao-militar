@@ -165,8 +165,8 @@ export default function FaiDetailClient({ faiId }: { faiId: string }) {
     );
   }
 
-  // Recalculate Live Regimental Math strictly for Praças (Divisor 31) considering 2 or 3 evaluators
-  const categoriaEfetiva = 'PRACA';
+  // Cálculo Regimental em conformidade com a categoria do militar (Divisor 52 para Oficiais/Sargentos, Divisor 31 para Praças)
+  const categoriaEfetiva = fai.militar?.categoria || (simularPraça ? 'PRACA' : 'OFICIAL');
   const numAvaliadoresEfetivo = fai.numeroAvaliadores || 3;
   const resultadoCalculo = calcularMediaRegimental(
     categoriaEfetiva,
@@ -435,7 +435,7 @@ export default function FaiDetailClient({ faiId }: { faiId: string }) {
           {activeStep === 2 && (
             <div>
               <Bloco03Grelha
-                categoria="PRACA"
+                categoria={categoriaEfetiva}
                 grelha={fai.grelha || {}}
                 onGrelhaChange={(novaGrelha) => setFai({ ...fai, grelha: novaGrelha })}
                 numeroAvaliadores={numAvaliadoresEfetivo}

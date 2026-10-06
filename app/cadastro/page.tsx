@@ -6,7 +6,7 @@ import { useRouter } from 'next/navigation';
 import { Shield, ArrowRight, AlertCircle, CheckCircle2, User, Hash, Lock, Building } from 'lucide-react';
 import { useAuth } from '@/context/auth-context';
 import { Button } from '@/components/ui/button';
-import { POSTOS_MILITARES } from '@/lib/constants';
+import { POSTOS_MILITARES, ARMAS_SERVICOS, QUADROS_ESPECIAIS } from '@/lib/constants';
 import { TacticalBackground } from '@/components/ui/tactical-background';
 
 export default function CadastroPage() {
@@ -19,6 +19,9 @@ export default function CadastroPage() {
   const [nomeGuerra, setNomeGuerra] = useState('');
   const [posto, setPosto] = useState('Tenente');
   const [categoria, setCategoria] = useState<'OFICIAL' | 'SARGENTO' | 'PRACA'>('OFICIAL');
+  const [asc, setAsc] = useState('Infantaria');
+  const [qe, setQe] = useState<'QP' | 'QC'>('QP');
+  const [tempoServicoAnos, setTempoServicoAnos] = useState(5);
   const [unidade, setUnidade] = useState('Quartel-General do Exército');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -49,6 +52,9 @@ export default function CadastroPage() {
           nomeGuerra: nomeGuerra || nomeCompleto.split(' ')[0],
           posto,
           categoria,
+          asc,
+          qe,
+          tempoServicoAnos,
           unidade,
           funcaoDesempenhada: 'Efetivo Militar',
         },
@@ -210,6 +216,52 @@ export default function CadastroPage() {
                   onChange={(e) => setUnidade(e.target.value)}
                   placeholder="Ex: QG do Exército"
                   className="w-full px-3 py-2 bg-white border border-slate-300 rounded-xl text-xs text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-[#B89047]/30 focus:border-[#B89047] transition-all"
+                />
+              </div>
+            </div>
+
+            {/* Linha Especialidade, Quadro e Tempo de Serviço */}
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+              <div className="space-y-1">
+                <label className="text-xs font-semibold text-slate-700">Especialidade *</label>
+                <select
+                  value={asc}
+                  onChange={(e) => setAsc(e.target.value)}
+                  className="w-full px-3 py-2 bg-white border border-slate-300 rounded-xl text-xs text-slate-900 focus:outline-none focus:ring-2 focus:ring-[#B89047]/30 focus:border-[#B89047] transition-all"
+                >
+                  {ARMAS_SERVICOS.map((esp) => (
+                    <option key={esp} value={esp}>
+                      {esp}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="space-y-1">
+                <label className="text-xs font-semibold text-slate-700">Tipo de Quadro *</label>
+                <select
+                  value={qe}
+                  onChange={(e) => setQe(e.target.value as any)}
+                  className="w-full px-3 py-2 bg-white border border-slate-300 rounded-xl text-xs text-slate-900 focus:outline-none focus:ring-2 focus:ring-[#B89047]/30 focus:border-[#B89047] transition-all"
+                >
+                  {QUADROS_ESPECIAIS.map((q) => (
+                    <option key={q.sigla} value={q.sigla}>
+                      {q.sigla} - {q.nome}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="space-y-1">
+                <label className="text-xs font-semibold text-slate-700">Tempo de Serviço (Anos)</label>
+                <input
+                  type="number"
+                  min="0"
+                  max="50"
+                  value={tempoServicoAnos}
+                  onChange={(e) => setTempoServicoAnos(parseInt(e.target.value) || 0)}
+                  placeholder="5"
+                  className="w-full px-3 py-2 bg-white border border-slate-300 rounded-xl text-xs text-slate-900 focus:outline-none focus:ring-2 focus:ring-[#B89047]/30 focus:border-[#B89047] transition-all font-mono"
                 />
               </div>
             </div>

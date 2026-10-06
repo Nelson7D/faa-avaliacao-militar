@@ -69,10 +69,17 @@ export function Bloco01Identificacao({
 
         {/* Row 2: Posto e Nome Completo */}
         <div className="flex flex-col md:flex-row fai-row">
-          <div className="fai-border-cell p-3 w-full md:w-56">
-            <label className="block text-[10px] uppercase text-muted-foreground font-bold mb-1">
-              Posto / Graduação
-            </label>
+          <div className="fai-border-cell p-3 w-full md:w-64">
+            <div className="flex justify-between items-center mb-1">
+              <label className="block text-[10px] uppercase text-muted-foreground font-bold">
+                Posto / Patente
+              </label>
+              {militar.categoria && (
+                <span className="text-[9px] font-mono font-bold px-1.5 py-0.2 rounded bg-[#0F3323]/10 text-[#0F3323] border border-[#0F3323]/20">
+                  {militar.categoria}
+                </span>
+              )}
+            </div>
             <select
               value={militar.posto || ''}
               onChange={(e) => {
@@ -80,17 +87,34 @@ export function Bloco01Identificacao({
                 onMilitarChange({
                   ...militar,
                   posto: e.target.value,
-                  categoria: 'PRACA',
+                  categoria: selectedPosto?.categoria || 'OFICIAL',
+                  subcategoria: selectedPosto?.sub,
                 });
               }}
               className="w-full bg-transparent border-none p-0 focus:ring-0 text-xs font-bold text-primary uppercase outline-none"
             >
-              <option value="">Selecione o Posto da Praça...</option>
-              {POSTOS_MILITARES.filter((p) => p.categoria === 'PRACA').map((p) => (
-                <option key={p.id} value={p.nome}>
-                  {p.nome} (PRACA)
-                </option>
-              ))}
+              <option value="">Selecione o Posto...</option>
+              <optgroup label="OFICIAIS">
+                {POSTOS_MILITARES.filter((p) => p.categoria === 'OFICIAL').map((p) => (
+                  <option key={p.id} value={p.nome}>
+                    {p.nome}
+                  </option>
+                ))}
+              </optgroup>
+              <optgroup label="SARGENTOS">
+                {POSTOS_MILITARES.filter((p) => p.categoria === 'SARGENTO').map((p) => (
+                  <option key={p.id} value={p.nome}>
+                    {p.nome}
+                  </option>
+                ))}
+              </optgroup>
+              <optgroup label="PRAÇAS">
+                {POSTOS_MILITARES.filter((p) => p.categoria === 'PRACA').map((p) => (
+                  <option key={p.id} value={p.nome}>
+                    {p.nome}
+                  </option>
+                ))}
+              </optgroup>
             </select>
           </div>
 
@@ -102,13 +126,13 @@ export function Bloco01Identificacao({
               type="text"
               value={militar.nomeCompleto || ''}
               onChange={(e) => onMilitarChange({ ...militar, nomeCompleto: e.target.value })}
-              placeholder="Nome Completo por extenso"
+              placeholder="Nome Completo por extenso (previamente inserido pelo Chefe do PQ)"
               className="w-full bg-transparent border-none p-0 focus:ring-0 text-xs font-bold text-primary uppercase outline-none"
             />
           </div>
         </div>
 
-        {/* Row 3: Função, Arma/Serviço, Quadro QE */}
+        {/* Row 3: Função, Especialidade (ASC), Quadro QE, Tempo de Serviço */}
         <div className="flex flex-col md:flex-row fai-row">
           <div className="fai-border-cell p-3 flex-1">
             <label className="block text-[10px] uppercase text-muted-foreground font-bold mb-1">
@@ -118,21 +142,21 @@ export function Bloco01Identificacao({
               type="text"
               value={militar.funcaoDesempenhada || ''}
               onChange={(e) => onMilitarChange({ ...militar, funcaoDesempenhada: e.target.value })}
-              placeholder="Ex: Chefe da Secção de Transmissões"
+              placeholder="Ex: Comandante de Companhia / Chefe de Secção"
               className="w-full bg-transparent border-none p-0 focus:ring-0 text-xs font-medium text-foreground uppercase outline-none"
             />
           </div>
 
           <div className="fai-border-cell p-3 w-full md:w-56">
             <label className="block text-[10px] uppercase text-muted-foreground font-bold mb-1">
-              Arma / Serviço / Classe (ASC)
+              Especialidade Militar
             </label>
             <select
               value={militar.asc || ''}
               onChange={(e) => onMilitarChange({ ...militar, asc: e.target.value })}
               className="w-full bg-transparent border-none p-0 focus:ring-0 text-xs font-medium text-foreground outline-none"
             >
-              <option value="">Selecione ASC...</option>
+              <option value="">Selecione a Especialidade...</option>
               {ARMAS_SERVICOS.map((asc) => (
                 <option key={asc} value={asc}>
                   {asc}
@@ -143,11 +167,11 @@ export function Bloco01Identificacao({
 
           <div className="fai-border-cell p-3 w-full md:w-36">
             <label className="block text-[10px] uppercase text-muted-foreground font-bold mb-1">
-              Quadro (QE)
+              Tipo de Quadro
             </label>
             <select
               value={militar.qe || 'QP'}
-              onChange={(e) => onMilitarChange({ ...militar, qe: e.target.value as 'QP' | 'QRC' | 'QCO' })}
+              onChange={(e) => onMilitarChange({ ...militar, qe: e.target.value as any })}
               className="w-full bg-transparent border-none p-0 focus:ring-0 text-xs font-bold text-center text-primary outline-none"
             >
               {QUADROS_ESPECIAIS.map((q) => (
@@ -156,6 +180,24 @@ export function Bloco01Identificacao({
                 </option>
               ))}
             </select>
+          </div>
+
+          <div className="fai-border-cell p-3 w-full md:w-36 bg-muted/20">
+            <label className="block text-[10px] uppercase text-muted-foreground font-bold mb-1">
+              Tempo de Serviço
+            </label>
+            <div className="flex items-center gap-1">
+              <input
+                type="number"
+                min="0"
+                max="50"
+                value={militar.tempoServicoAnos ?? ''}
+                onChange={(e) => onMilitarChange({ ...militar, tempoServicoAnos: parseInt(e.target.value) || 0 })}
+                placeholder="0"
+                className="w-12 bg-transparent border-none p-0 focus:ring-0 text-xs font-mono font-bold text-primary text-center outline-none"
+              />
+              <span className="text-[11px] text-muted-foreground font-medium">anos</span>
+            </div>
           </div>
         </div>
       </div>

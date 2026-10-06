@@ -13,9 +13,13 @@ import {
   Award,
   AlertTriangle,
   Info,
+  ChevronDown,
+  ChevronUp,
+  ListChecks,
 } from 'lucide-react';
 import { useAuth } from '@/context/auth-context';
 import { Button } from '@/components/ui/button';
+import { BlocoIntegridade } from './bloco-integridade';
 
 interface Bloco03GrelhaProps {
   categoria: CategoriaMilitar;
@@ -173,6 +177,22 @@ export function Bloco03Grelha({
     return true;
   });
 
+  const [fatorExpandido, setFatorExpandido] = useState<string | null>(null);
+
+  const avaliadorAtivo: 'avaliador1' | 'avaliador2' | 'cmdte' =
+    papelDesbloqueado ||
+    (canEditCmdte
+      ? 'cmdte'
+      : canEditAval2
+      ? 'avaliador2'
+      : 'avaliador1');
+
+  const notaF1Atual =
+    (numeroAvaliadores === 3 && grelha['F1']?.cmdte !== undefined ? grelha['F1']?.cmdte : null) ??
+    (grelha['F1']?.avaliador2 !== undefined ? grelha['F1']?.avaliador2 : null) ??
+    grelha['F1']?.avaliador1 ??
+    15;
+
   return (
     <div className="p-4 sm:p-6 bg-slate-50/50 space-y-4">
       {/* Top Tactical Banner */}
@@ -200,11 +220,38 @@ export function Bloco03Grelha({
         </div>
 
         <div className="flex items-center gap-2 flex-wrap">
-          <span className="text-[11px] font-mono font-bold text-[#0F3323] bg-emerald-50 px-2.5 py-1 rounded-xl border border-emerald-200 shadow-2xs">
-            Avaliação de Praça (Divisor Base 31)
+          <span
+            className={cn(
+              'text-[11px] font-mono font-bold px-2.5 py-1 rounded-xl border shadow-2xs',
+              isPraca
+                ? 'text-[#0F3323] bg-emerald-50 border-emerald-200'
+                : categoria === 'OFICIAL'
+                ? 'text-blue-900 bg-blue-50 border-blue-200'
+                : 'text-amber-900 bg-amber-50 border-amber-200'
+            )}
+          >
+            {isPraca
+              ? 'Avaliação de Praça (Divisor Base 31 • F6, F8, F10, F11, F13, F14 Dispensados)'
+              : categoria === 'OFICIAL'
+              ? 'Avaliação de Oficial (Divisor Base 52 • F3, F8, F11, F14 Disponíveis)'
+              : 'Avaliação de Sargento (Divisor Base 52 • Grelha Plena)'}
           </span>
         </div>
       </div>
+
+      {/* BLOCO 2: Bloco de Integridade com 4 itens de 5 pontos */}
+      <BlocoIntegridade
+        valorAtual={notaF1Atual}
+        readOnly={readOnly || isAvaliado || (!canEditAval1 && !canEditAval2 && !canEditCmdte)}
+        avaliadorLabel={
+          avaliadorAtivo === 'cmdte'
+            ? 'Comandante'
+            : avaliadorAtivo === 'avaliador2'
+            ? '2º Avaliador'
+            : '1º Avaliador'
+        }
+        onChange={(novoNivel) => handleNotaChange('F1', avaliadorAtivo, novoNivel)}
+      />
 
       {/* Group Navigation Bar - Reduces cognitive load */}
       <div className="flex flex-wrap items-center justify-between gap-2 p-2 bg-white rounded-xl border border-slate-200/80 text-xs shadow-2xs">
@@ -448,6 +495,31 @@ export function Bloco03Grelha({
                         <p className={cn('text-[11px] mt-0.5 leading-tight', isExcluded ? 'text-slate-400' : 'text-slate-500')}>
                           {fator.descricao}
                         </p>
+
+                        {/* Critérios Regulamentares Expansíveis */}
+                        {fator.subitens && fator.subitens.length > 0 && !isExcluded && (
+                          <div className="mt-1">
+                            <button
+                              type="button"
+                              onClick={() => setFatorExpandido(fatorExpandido === fator.id ? null : fator.id)}
+                              className="text-[10px] font-mono font-semibold text-[#0F3323] hover:text-[#B89047] inline-flex items-center gap-1 transition-colors cursor-pointer"
+                            >
+                              <ListChecks className="w-3 h-3 text-[#B89047]" />
+                              {fatorExpandido === fator.id ? 'Ocultar critérios' : 'Ver 4 critérios regulamentares'}
+                              {fatorExpandido === fator.id ? <ChevronUp className="w-2.5 h-2.5" /> : <ChevronDown className="w-2.5 h-2.5" />}
+                            </button>
+
+                            {fatorExpandido === fator.id && (
+                              <div className="mt-1.5 p-2 bg-slate-50 border border-slate-200 rounded-lg text-[10px] text-slate-700 space-y-1 animate-in fade-in">
+                                <ol className="list-decimal pl-4 space-y-0.5">
+                                  {fator.subitens.map((sub, sIdx) => (
+                                    <li key={sIdx} className="leading-tight">{sub}</li>
+                                  ))}
+                                </ol>
+                              </div>
+                            )}
+                          </div>
+                        )}
                       </td>
 
                     {/* Coeficiente */}

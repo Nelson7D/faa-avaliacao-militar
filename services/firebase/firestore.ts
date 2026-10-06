@@ -1,8 +1,9 @@
-import { Militar } from '@/types/militar';
+import { Militar, CategoriaMilitar } from '@/types/militar';
 import { FaiDocument, EtapaWorkflow } from '@/types/fai';
 import { ImpugnacaoDocument } from '@/types/impugnacao';
 import { AuditLogEntry, WORKFLOW_ETAPAS_CONFIG } from '@/types/workflow';
 import { AtribuicaoAvaliacao, ValidacaoCodigoResult, PapelAvaliador } from '@/types/avaliacao';
+import { isSuperiorHierarquico } from '@/lib/hierarchy';
 import { db, isFirebaseConfigured } from './config';
 import {
   collection,
@@ -171,9 +172,10 @@ export async function fetchFaiByMilitarNip(nip: string): Promise<FaiDocument | u
 }
 
 export async function saveFaiDocument(fai: FaiDocument): Promise<FaiDocument> {
-  // Garantia Regimental: apenas militares da categoria Praça podem ser avaliados
-  if (fai.militar?.categoria && fai.militar.categoria !== 'PRACA') {
-    throw new Error(`Regulamento Militar FAA: Apenas militares da categoria Praça podem ser avaliados (NIP ${fai.militarNip} é ${fai.militar.categoria}).`);
+  // Garantia Regimental FAA: valida categorias oficiais elegíveis (Oficiais, Sargentos e Praças)
+  const categoriasValidas: CategoriaMilitar[] = ['OFICIAL', 'SARGENTO', 'PRACA'];
+  if (fai.militar?.categoria && !categoriasValidas.includes(fai.militar.categoria)) {
+    throw new Error(`Regulamento Militar FAA: Categoria '${fai.militar.categoria}' inválida para avaliação regimental.`);
   }
 
   if (isFirebaseConfigured() && db) {
@@ -494,9 +496,48 @@ export async function criarAtribuicaoAvaliacao(
     | 'atualizadoEm'
   >
 ): Promise<AtribuicaoAvaliacao> {
-  // Garantia Regimental: apenas militares da categoria Praça podem ser avaliados
-  if (dados.militarAvaliadoCategoria && dados.militarAvaliadoCategoria !== 'PRACA') {
-    throw new Error(`Regulamento Militar FAA: Apenas militares da categoria Praça podem ser avaliados (Militar indicado é ${dados.militarAvaliadoCategoria}).`);
+  // Garantia Regimental FAA: valida categorias oficiais elegíveis (Oficiais, Sargentos e Praças)
+  const categoriasValidas: CategoriaMilitar[] = ['OFICIAL', 'SARGENTO', 'PRACA'];
+  if (dados.militarAvaliadoCategoria && !categoriasValidas.includes(dados.militarAvaliadoCategoria)) {
+    throw new Error(`Regulamento Militar FAA: Categoria '${dados.militarAvaliadoCategoria}' inválida para avaliação regimental.`);
+  }
+
+  // Restrição Estrita: Não é permitida auto-avaliação
+  if (
+    dados.avaliador1Nip === dados.militarAvaliadoNip ||
+    dados.avaliador2Nip === dados.militarAvaliadoNip ||
+    dados.cmdteNip === dados.militarAvaliadoNip
+  ) {
+    throw new Error('Regulamento Militar FAA: Não é permitida auto-avaliação no processo regimental.');
+  }
+
+  // Restrição Estrita: O avaliador deve ser estritamente superior ao militar avaliado (não subordinado)
+  if (
+    dados.avaliador1Posto &&
+    dados.militarAvaliadoPosto &&
+    isSuperiorHierarquico(dados.militarAvaliadoPosto, dados.avaliador1Posto)
+  ) {
+    throw new Error(
+      `Regulamento Militar FAA: Violação hierárquica. O 1º Avaliador (${dados.avaliador1Posto}) é subordinado ao militar avaliado (${dados.militarAvaliadoPosto}).`
+    );
+  }
+  if (
+    dados.avaliador2Posto &&
+    dados.militarAvaliadoPosto &&
+    isSuperiorHierarquico(dados.militarAvaliadoPosto, dados.avaliador2Posto)
+  ) {
+    throw new Error(
+      `Regulamento Militar FAA: Violação hierárquica. O 2º Avaliador (${dados.avaliador2Posto}) é subordinado ao militar avaliado (${dados.militarAvaliadoPosto}).`
+    );
+  }
+  if (
+    dados.cmdtePosto &&
+    dados.militarAvaliadoPosto &&
+    isSuperiorHierarquico(dados.militarAvaliadoPosto, dados.cmdtePosto)
+  ) {
+    throw new Error(
+      `Regulamento Militar FAA: Violação hierárquica. O Comandante (${dados.cmdtePosto}) é subordinado ao militar avaliado (${dados.militarAvaliadoPosto}).`
+    );
   }
 
   const id = `ATR-${Date.now().toString().slice(-6)}-${Math.random().toString(36).substr(2, 4).toUpperCase()}`;

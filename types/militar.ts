@@ -14,12 +14,13 @@ export interface Militar {
   orgao: string; // e.g., 'Direção de Recursos Humanos'
   funcaoDesempenhada: string;
   asc: string; // Arma, Serviço ou Classe (e.g., 'Infantaria', 'Transmissões e Informática')
-  qe: 'QP' | 'QRC' | 'QCO'; // Quadro Especial: Quadro Permanente, Quadro de Reserva/Contrato, etc.
+  qe: 'QP' | 'QC' | 'QRC' | 'QCO'; // Quadro Especial: QP (Quadro Permanente), QC (Quadro por Contrato)
   dataNascimento: string;
   naturalidade: string;
   filiacao: string;
   dataIngresso: string;
   tempoServicoAnos: number;
+  tempoServicoMeses?: number;
   feridoEmServico: boolean;
   habilitacoesLiterarias: string;
   estadoCivil: string;

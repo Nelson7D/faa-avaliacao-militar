@@ -101,13 +101,13 @@ export default function AdminPage() {
       alert('Selecione o militar avaliado e o 1º Avaliador.');
       return;
     }
+    if (aval1Nip === selMilitarNip || aval2Nip === selMilitarNip || cmdteNip === selMilitarNip) {
+      alert('Regulamento Militar FAA: Não é permitida auto-avaliação no processo regimental.');
+      return;
+    }
     const milAvaliado = militaresList.find((m) => m.nip === selMilitarNip);
     if (!milAvaliado) {
       alert('Militar avaliado não encontrado.');
-      return;
-    }
-    if (milAvaliado.categoria !== 'PRACA') {
-      alert(`Regulamento Militar FAA: Apenas militares da categoria Praça podem ser avaliados. O militar ${milAvaliado.nomeCompleto} é ${milAvaliado.categoria}.`);
       return;
     }
     const aval1 = users.find((u) => u.nip === aval1Nip) || militaresList.find((m) => m.nip === aval1Nip);
@@ -333,12 +333,12 @@ export default function AdminPage() {
 
                 <form onSubmit={handleCriarAtribuicao} className="space-y-4">
                   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
-                    {/* Militar Avaliado (Apenas Praças) */}
+                    {/* Militar Avaliado (Oficiais, Sargentos e Praças) */}
                     <div className="space-y-1">
                       <div className="flex justify-between items-center">
-                        <label className="text-[11px] font-bold text-slate-700">Militar Avaliado (Praça) *</label>
-                        <span className="text-[9.5px] font-mono font-bold text-amber-700 bg-amber-50 px-1.5 py-0.2 rounded border border-amber-200">
-                          Exclusivo Praças
+                        <label className="text-[11px] font-bold text-slate-700">Militar Avaliado *</label>
+                        <span className="text-[9.5px] font-mono font-bold text-[#0F3323] bg-emerald-50 px-1.5 py-0.2 rounded border border-emerald-200">
+                          Oficiais, Sargentos e Praças
                         </span>
                       </div>
                       <select
@@ -347,18 +347,16 @@ export default function AdminPage() {
                         onChange={(e) => setSelMilitarNip(e.target.value)}
                         className="w-full p-2 border border-slate-300 rounded-xl text-xs bg-white focus:ring-2 focus:ring-primary/20"
                       >
-                        <option value="">Selecione a Praça a avaliar...</option>
-                        {militaresList
-                          .filter((m) => m.categoria === 'PRACA')
-                          .map((m) => (
-                            <option key={m.nip} value={m.nip}>
-                              {m.posto} {m.nomeCompleto} (NIP {m.nip})
-                            </option>
-                          ))}
+                        <option value="">Selecione o Militar a avaliar...</option>
+                        {militaresList.map((m) => (
+                          <option key={m.nip} value={m.nip}>
+                            [{m.categoria}] {m.posto} {m.nomeCompleto} (NIP {m.nip})
+                          </option>
+                        ))}
                       </select>
-                      {militaresList.filter((m) => m.categoria === 'PRACA').length === 0 && (
+                      {militaresList.length === 0 && (
                         <p className="text-[10px] text-amber-600 font-medium">
-                          Nenhuma Praça cadastrada. Cadastre primeiro Soldados ou Cabos em Processos Individuais.
+                          Nenhum militar cadastrado. Cadastre primeiro os militares no sistema.
                         </p>
                       )}
                     </div>
