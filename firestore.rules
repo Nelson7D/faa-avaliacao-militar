@@ -48,36 +48,28 @@ service cloud.firestore {
     // 1. UTILIZADORES / PERFIS (users)
     // =========================================================================
     match /users/{userId} {
-      allow read: if true;
-      allow create, update: if true;
-      allow delete: if isAdmin();
+      allow read, write: if true;
     }
 
     // =========================================================================
     // 2. EFETIVO MILITAR & FOLHA MATRÍCULA (militares)
     // =========================================================================
     match /militares/{nip} {
-      allow read: if true;
-      allow create, update: if true;
-      allow delete: if isAdmin();
+      allow read, write: if true;
     }
 
     // =========================================================================
     // 3. FICHAS DE AVALIAÇÃO INDIVIDUAL (fais)
     // =========================================================================
     match /fais/{faiId} {
-      allow read: if true;
-      allow create, update: if true;
-      allow delete: if isAdmin();
+      allow read, write: if true;
     }
 
     // =========================================================================
     // 4. IMPUGNAÇÕES E RECURSOS HIERÁRQUICOS (impugnacoes)
     // =========================================================================
     match /impugnacoes/{impugnacaoId} {
-      allow read: if true;
-      allow create, update: if true;
-      allow delete: if isAdmin();
+      allow read, write: if true;
     }
 
     // =========================================================================
@@ -94,9 +86,7 @@ service cloud.firestore {
     // 6. ATRIBUIÇÕES DE AVALIAÇÃO & CÓDIGOS DPQ (atribuicoes_avaliacao)
     // =========================================================================
     match /atribuicoes_avaliacao/{atribuicaoId} {
-      allow read: if true;
-      allow create, update: if true;
-      allow delete: if isAdmin();
+      allow read, write: if true;
     }
   }
 }
