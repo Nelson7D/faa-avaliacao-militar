@@ -174,11 +174,11 @@ export function Sidebar({ mobileOpen = false, onMobileClose }: SidebarProps) {
             <div>
               <div className="flex items-center gap-1.5">
                 <h1 className="font-black text-sm tracking-wider text-slate-100 uppercase font-sans">
-                  SISTEMA FAA
+                  SISTEMA FAI
                 </h1>
               </div>
-              <p className="text-[10px] text-[#D4AF37] font-semibold tracking-widest uppercase mt-0.5 font-mono">
-                COMANDO DE PESSOAL
+              <p className="text-[10px] text-[#D4AF37] font-semibold tracking-tight mt-0.5">
+                Ficha de Avaliação Individual
               </p>
             </div>
           </div>

@@ -1,4 +1,4 @@
-# Capturas de Tela do Sistema FAA (FAI Digital v2.5)
+# Capturas de Tela do Sistema FAI (Ficha de Avaliação Individual v2.5)
 
 Todas as capturas foram obtidas via **Chrome DevTools MCP** em resolução desktop (1440x900) e modo de página inteira (*fullPage*):
 

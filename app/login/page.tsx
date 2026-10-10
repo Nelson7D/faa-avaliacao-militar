@@ -76,10 +76,13 @@ export default function LoginPage() {
           </div>
 
           <h1 className="text-2xl md:text-3xl font-black tracking-wider text-transparent bg-clip-text bg-gradient-to-r from-[#FDE68A] via-[#D4AF37] to-[#B89047] uppercase drop-shadow-[0_2px_8px_rgba(0,0,0,0.6)]">
-            SISTEMA FAA
+            SISTEMA FAI
           </h1>
-          <p className="text-xs text-[#9EAF94] font-medium tracking-tight">
-            Avaliação Individual dos Militares • Manual VII FAA
+          <p className="text-xs text-[#FDE68A] font-semibold tracking-tight">
+            Ficha de Avaliação Individual
+          </p>
+          <p className="text-[11px] text-[#9EAF94] font-medium tracking-tight">
+            Forças Armadas Angolanas • Manual VII FAA
           </p>
         </div>
 

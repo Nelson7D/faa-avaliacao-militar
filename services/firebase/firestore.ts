@@ -19,7 +19,7 @@ import {
 
 // ================= FIRESTORE SERVICE LAYER ================= //
 
-function sanitizeFirestoreData<T>(data: T): T {
+export function sanitizeFirestoreData<T>(data: T): T {
   if (data === undefined) return null as any;
   if (data === null || typeof data !== 'object') return data;
   if (data instanceof Date) return data;
@@ -72,9 +72,11 @@ export async function fetchMilitarByNip(nip: string): Promise<Militar | undefine
 export async function saveMilitarData(militar: Militar): Promise<Militar> {
   if (isFirebaseConfigured() && db) {
     try {
-      await setDoc(doc(db, 'militares', militar.nip), militar);
+      const sanitized = sanitizeFirestoreData(militar);
+      await setDoc(doc(db, 'militares', militar.nip), sanitized);
     } catch (err) {
       console.warn('Firestore saveMilitarData error:', err);
+      throw err;
     }
   }
   return militar;

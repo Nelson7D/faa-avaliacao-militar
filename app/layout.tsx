@@ -16,8 +16,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: 'SISTEMA DE AVALIAÇÃO INDIVIDUAL DOS MILITARES - FAA',
-  description: 'Sistema Regimental de Avaliação Individual das Forças Armadas Angolanas',
+  title: 'SISTEMA FAI - Ficha de Avaliação Individual',
+  description: 'Sistema Regimental FAI (Ficha de Avaliação Individual) das Forças Armadas Angolanas',
 };
 
 export default function RootLayout({

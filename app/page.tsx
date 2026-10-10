@@ -21,7 +21,8 @@ export default function Home() {
   return (
     <div className="min-h-screen bg-[#0B1612] flex flex-col items-center justify-center text-white space-y-3">
       <div className="w-10 h-10 border-3 border-[#D4AF37] border-t-transparent rounded-full animate-spin" />
-      <p className="text-xs font-mono text-slate-400">A iniciar Sistema FAA...</p>
+      <p className="text-xs font-mono text-slate-300">A iniciar Sistema FAI...</p>
+      <p className="text-[11px] font-sans text-[#D4AF37] font-semibold">Ficha de Avaliação Individual</p>
     </div>
   );
 }

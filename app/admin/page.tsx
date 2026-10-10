@@ -19,6 +19,7 @@ import {
   Copy,
   PlusCircle,
   UserCheck,
+  UserPlus,
 } from 'lucide-react';
 import { useAuth } from '@/context/auth-context';
 import {
@@ -244,10 +245,10 @@ export default function AdminPage() {
         <div>
           <h1 className="text-xl sm:text-2xl font-bold text-slate-100 tracking-tight flex items-center gap-2">
             <ShieldCheck className="w-5 h-5 text-[#D4AF37]" />
-            Painel de Administração do Sistema FAA
+            Painel de Administração do Sistema FAI
           </h1>
           <p className="text-xs text-[#9EAF94] mt-0.5 font-medium">
-            Gestão global de utilizadores, atribuição de funções regimentais, auditoria de segurança e parâmetros.
+            Ficha de Avaliação Individual • Gestão global de utilizadores, atribuição de funções regimentais, auditoria de segurança e parâmetros.
           </p>
         </div>
       </div>
@@ -603,15 +604,24 @@ export default function AdminPage() {
                 </p>
               </div>
 
-              <div className="relative w-full sm:w-72">
-                <Search className="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
-                <input
-                  type="text"
-                  value={searchUser}
-                  onChange={(e) => setSearchUser(e.target.value)}
-                  placeholder="Filtrar por NIP, Nome ou Posto..."
-                  className="w-full pl-8 pr-3 py-1.5 border border-slate-200 rounded-xl font-mono text-xs bg-slate-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-primary/20"
-                />
+              <div className="flex flex-wrap items-center gap-2.5 w-full sm:w-auto">
+                <Link href="/cadastro">
+                  <Button size="sm" className="text-xs bg-[#0F3323] hover:bg-[#184A34] text-white flex items-center gap-1.5 shadow-2xs">
+                    <UserPlus className="w-3.5 h-3.5 text-[#D4AF37]" />
+                    Cadastrar Novo Militar
+                  </Button>
+                </Link>
+
+                <div className="relative w-full sm:w-64">
+                  <Search className="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+                  <input
+                    type="text"
+                    value={searchUser}
+                    onChange={(e) => setSearchUser(e.target.value)}
+                    placeholder="Filtrar por NIP, Nome ou Posto..."
+                    className="w-full pl-8 pr-3 py-1.5 border border-slate-200 rounded-xl font-mono text-xs bg-slate-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-primary/20"
+                  />
+                </div>
               </div>
             </div>
 

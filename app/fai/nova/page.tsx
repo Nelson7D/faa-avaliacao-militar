@@ -243,7 +243,7 @@ export default function NovaFaiPage() {
 
     await registrarAuditLog({
       operadorNip: profile?.nip || 'SISTEMA',
-      operadorNome: profile ? `${profile.posto} ${profile.nomeGuerra || profile.nomeCompleto}` : 'Sistema FAA',
+      operadorNome: profile ? `${profile.posto} ${profile.nomeGuerra || profile.nomeCompleto}` : 'Sistema FAI',
       operadorPosto: profile?.posto || 'Oficial',
       acao: 'CRIACAO_FAI',
       entidade: 'FAI',

@@ -9,19 +9,19 @@ import {
   onAuthStateChanged,
 } from 'firebase/auth';
 import { doc, getDoc, setDoc, collection, getDocs, query, where } from 'firebase/firestore';
-import { auth, db, isFirebaseConfigured } from '@/services/firebase/config';
+import { auth, db, isFirebaseConfigured, firebaseConfig } from '@/services/firebase/config';
 import { Militar } from '@/types/militar';
-import { saveMilitarData, fetchMilitarByNip } from '@/services/firebase/firestore';
+import { saveMilitarData, fetchMilitarByNip, sanitizeFirestoreData } from '@/services/firebase/firestore';
 
 export interface UserProfile {
   uid: string;
   email: string;
   nip: string;
   nomeCompleto: string;
-  nomeGuerra: string;
+  nomeGuerra?: string;
   posto: string;
   unidade: string;
-  funcaoDesempenhada: string;
+  funcaoDesempenhada?: string;
   categoria: 'OFICIAL' | 'SARGENTO' | 'PRACA';
   role: 'ADMIN' | 'DPQ' | 'CMDTE' | 'AVALIADOR_1' | 'AVALIADOR_2' | 'MILITAR_AVALIADO';
 }
@@ -31,7 +31,12 @@ interface AuthContextType {
   profile: UserProfile | null;
   loading: boolean;
   login: (emailOrNip: string, pass: string) => Promise<void>;
-  registerMilitar: (email: string, pass: string, militarData: Partial<Militar>, role?: UserProfile['role']) => Promise<void>;
+  registerMilitar: (
+    email: string,
+    pass: string,
+    militarData: Partial<Militar>,
+    role?: UserProfile['role']
+  ) => Promise<UserProfile>;
   logout: () => Promise<void>;
 }
 
@@ -40,7 +45,7 @@ const AuthContext = createContext<AuthContextType>({
   profile: null,
   loading: true,
   login: async () => {},
-  registerMilitar: async () => {},
+  registerMilitar: async () => ({} as UserProfile),
   logout: async () => {},
 });
 
@@ -112,9 +117,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const login = async (emailOrNip: string, pass: string) => {
     const rawInput = emailOrNip.trim();
-    let email = rawInput;
+    const isEmailInput = rawInput.includes('@');
+    let email = rawInput.toLowerCase();
     let cleanNip = rawInput.replace('@faa.ao', '').trim();
-    if (!email.includes('@')) {
+    if (!isEmailInput) {
       email = `${cleanNip.toLowerCase()}@faa.ao`;
     }
 
@@ -128,7 +134,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         const cred = await signInWithEmailAndPassword(auth, email, pass);
         setUser(cred.user);
 
-        const userDoc = await getDoc(doc(db, 'users', cred.user.uid));
+        let userDoc = await getDoc(doc(db, 'users', cred.user.uid));
         if (userDoc.exists()) {
           const data = userDoc.data() as UserProfile;
           setProfile(data);
@@ -152,6 +158,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         const isPendingConfig =
           authErr?.code === 'auth/configuration-not-found' ||
           authErr?.code === 'auth/operation-not-allowed' ||
+          authErr?.code === 'auth/invalid-credential' ||
+          authErr?.code === 'auth/user-not-found' ||
+          authErr?.code === 'auth/wrong-password' ||
           authErr?.message?.includes('configuration-not-found');
 
         if (!isPendingConfig) {
@@ -161,8 +170,22 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
 
     // 2. Fallback de verificação direta no Firestore
-    const userDoc = await getDoc(doc(db, 'users', cleanNip));
-    if (userDoc.exists()) {
+    // 2.1 Tentar buscar diretamente por NIP
+    let userDoc = await getDoc(doc(db, 'users', cleanNip));
+    if (!userDoc.exists() && isEmailInput) {
+      // 2.2 Se forneceu e-mail e não achou por doc(users, cleanNip), buscar por campo email
+      try {
+        const q = query(collection(db, 'users'), where('email', '==', rawInput.toLowerCase()));
+        const snap = await getDocs(q);
+        if (!snap.empty) {
+          userDoc = snap.docs[0];
+        }
+      } catch (err) {
+        console.warn('Erro ao consultar utilizador por e-mail no Firestore:', err);
+      }
+    }
+
+    if (userDoc && userDoc.exists()) {
       const data = userDoc.data() as UserProfile;
       setProfile(data);
       if (typeof window !== 'undefined') {
@@ -171,7 +194,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       return;
     }
 
-    // Verificar se existe registo militar correspondente
+    // 2.3 Verificar se existe registo militar correspondente
     const militarDoc = await fetchMilitarByNip(cleanNip);
     if (militarDoc) {
       const fallbackProfile: UserProfile = {
@@ -179,14 +202,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         email: `${militarDoc.nip}@faa.ao`,
         nip: militarDoc.nip,
         nomeCompleto: militarDoc.nomeCompleto,
-        nomeGuerra: militarDoc.nomeGuerra,
+        nomeGuerra: militarDoc.nomeGuerra || militarDoc.nomeCompleto.split(' ')[0],
         posto: militarDoc.posto,
         unidade: militarDoc.unidade,
-        funcaoDesempenhada: militarDoc.funcaoDesempenhada,
+        funcaoDesempenhada: militarDoc.funcaoDesempenhada || 'Efetivo Militar',
         categoria: militarDoc.categoria,
         role: cleanNip === '00000001' ? 'ADMIN' : 'MILITAR_AVALIADO',
       };
-      await setDoc(doc(db, 'users', cleanNip), fallbackProfile);
+      await setDoc(doc(db, 'users', cleanNip), sanitizeFirestoreData(fallbackProfile));
       setProfile(fallbackProfile);
       if (typeof window !== 'undefined') {
         localStorage.setItem('faa_user_session', JSON.stringify(fallbackProfile));
@@ -202,47 +225,73 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     pass: string,
     militarData: Partial<Militar>,
     role: UserProfile['role'] = 'MILITAR_AVALIADO'
-  ) => {
+  ): Promise<UserProfile> => {
     if (!isFirebaseConfigured() || !db) {
       throw new Error('O sistema de base de dados não está configurado.');
     }
 
-    const nip = militarData.nip;
+    const nip = (militarData.nip || '').trim();
     if (!nip) {
       throw new Error('O NIP é obrigatório para o cadastro militar.');
+    }
+
+    const cleanEmail = (email || '').trim().toLowerCase();
+    if (!cleanEmail) {
+      throw new Error('O e-mail é obrigatório para o cadastro.');
+    }
+
+    // 1. Verificar duplicação de NIP
+    const existingNipUser = await getDoc(doc(db, 'users', nip));
+    if (existingNipUser.exists()) {
+      throw new Error(`O militar com NIP ${nip} já se encontra cadastrado no sistema.`);
+    }
+
+    const existingMilitar = await fetchMilitarByNip(nip);
+    if (existingMilitar) {
+      throw new Error(`Já existe uma folha de matrícula com o NIP ${nip} no efetivo.`);
+    }
+
+    // 2. Verificar duplicação de E-mail
+    try {
+      const emailQuery = query(collection(db, 'users'), where('email', '==', cleanEmail));
+      const emailSnap = await getDocs(emailQuery);
+      if (!emailSnap.empty) {
+        throw new Error(`O e-mail ${cleanEmail} já está associado a outro militar no sistema.`);
+      }
+    } catch (e: any) {
+      if (e?.message?.includes('já está associado')) throw e;
     }
 
     const fullMilitar: Militar = {
       nip,
       bi: militarData.bi || '',
-      nomeCompleto: militarData.nomeCompleto || '',
-      nomeGuerra: militarData.nomeGuerra || (militarData.nomeCompleto?.split(' ')[0] || ''),
+      nomeCompleto: (militarData.nomeCompleto || '').trim(),
+      nomeGuerra: (militarData.nomeGuerra || (militarData.nomeCompleto?.split(' ')[0] || '')).trim(),
       posto: militarData.posto || 'Soldado',
       categoria: militarData.categoria || 'PRACA',
-      subcategoria: militarData.subcategoria,
+      ...(militarData.subcategoria ? { subcategoria: militarData.subcategoria } : {}),
       unidade: militarData.unidade || '',
       orgao: militarData.orgao || '',
-      funcaoDesempenhada: militarData.funcaoDesempenhada || '',
-      asc: militarData.asc || '',
+      funcaoDesempenhada: militarData.funcaoDesempenhada || 'Efetivo Militar',
+      asc: militarData.asc || 'Infantaria',
       qe: militarData.qe || 'QP',
       dataNascimento: militarData.dataNascimento || '',
       naturalidade: militarData.naturalidade || '',
       filiacao: militarData.filiacao || '',
       dataIngresso: militarData.dataIngresso || '',
       tempoServicoAnos: militarData.tempoServicoAnos || 0,
-      feridoEmServico: militarData.feridoEmServico || false,
+      feridoEmServico: Boolean(militarData.feridoEmServico),
       habilitacoesLiterarias: militarData.habilitacoesLiterarias || '',
       estadoCivil: militarData.estadoCivil || '',
       idiomas: militarData.idiomas || '',
       morada: militarData.morada || '',
       contacto: militarData.contacto || '',
       situacao: 'ACTIVO',
-      ...militarData,
     };
 
     const newProfile: UserProfile = {
       uid: nip,
-      email,
+      email: cleanEmail,
       nip: fullMilitar.nip,
       nomeCompleto: fullMilitar.nomeCompleto,
       nomeGuerra: fullMilitar.nomeGuerra,
@@ -253,25 +302,51 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       role,
     };
 
-    if (auth) {
+    const isCallerAdminOrDpq = profile?.role === 'ADMIN' || profile?.role === 'DPQ';
+
+    // 3. Criação no Firebase Auth se configurado
+    if (auth && isFirebaseConfigured()) {
       try {
-        const cred = await createUserWithEmailAndPassword(auth, email, pass);
-        newProfile.uid = cred.user.uid;
-        setUser(cred.user);
-        await setDoc(doc(db, 'users', cred.user.uid), newProfile);
+        if (isCallerAdminOrDpq) {
+          // Operador autenticado criando novo militar: utilizar instância isolada para não perder a sessão
+          const { initializeApp: initApp, deleteApp } = await import('firebase/app');
+          const { getAuth: getSecondaryAuth } = await import('firebase/auth');
+          const secondaryApp = initApp(firebaseConfig, `Register_${Date.now()}`);
+          const secondaryAuth = getSecondaryAuth(secondaryApp);
+          const cred = await createUserWithEmailAndPassword(secondaryAuth, cleanEmail, pass);
+          newProfile.uid = cred.user.uid;
+          await signOut(secondaryAuth);
+          await deleteApp(secondaryApp);
+        } else {
+          // Auto-cadastro não-autenticado: registrar na instância padrão
+          const cred = await createUserWithEmailAndPassword(auth, cleanEmail, pass);
+          newProfile.uid = cred.user.uid;
+          setUser(cred.user);
+        }
       } catch (authErr: any) {
         console.warn('Firebase Auth create user note:', authErr?.message);
       }
     }
 
-    // Gravar perfil em users/{nip} e militares/{nip}
-    await setDoc(doc(db, 'users', nip), newProfile);
+    // 4. Gravar perfil em users/{nip} e users/{uid} no Firestore
+    const sanitizedProfile = sanitizeFirestoreData(newProfile);
+    await setDoc(doc(db, 'users', nip), sanitizedProfile);
+    if (newProfile.uid !== nip) {
+      await setDoc(doc(db, 'users', newProfile.uid), sanitizedProfile);
+    }
+
+    // 5. Gravar dados militares regimentais
     await saveMilitarData(fullMilitar);
 
-    setProfile(newProfile);
-    if (typeof window !== 'undefined') {
-      localStorage.setItem('faa_user_session', JSON.stringify(newProfile));
+    // 6. Atualizar estado de sessão apenas se for auto-cadastro (não sobrescrever sessão de Admin/DPQ)
+    if (!isCallerAdminOrDpq) {
+      setProfile(newProfile);
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('faa_user_session', JSON.stringify(newProfile));
+      }
     }
+
+    return newProfile;
   };
 
   const logout = async () => {
