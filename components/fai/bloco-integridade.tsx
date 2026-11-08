@@ -204,7 +204,7 @@ export function BlocoIntegridade({
               onClick={() => setPredefinido(15)}
               className="text-[10px] font-mono font-semibold px-2 py-0.5 rounded bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-200 transition-colors cursor-pointer"
             >
-              15 pts (Padrão Bom)
+              15 pts
             </button>
             <button
               type="button"

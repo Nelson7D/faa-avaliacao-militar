@@ -16,10 +16,10 @@ import {
   ChevronDown,
   ChevronUp,
   ListChecks,
+  BookOpen,
 } from 'lucide-react';
 import { useAuth } from '@/context/auth-context';
 import { Button } from '@/components/ui/button';
-import { BlocoIntegridade } from './bloco-integridade';
 
 interface Bloco03GrelhaProps {
   categoria: CategoriaMilitar;
@@ -187,12 +187,6 @@ export function Bloco03Grelha({
       ? 'avaliador2'
       : 'avaliador1');
 
-  const notaF1Atual =
-    (numeroAvaliadores === 3 && grelha['F1']?.cmdte !== undefined ? grelha['F1']?.cmdte : null) ??
-    (grelha['F1']?.avaliador2 !== undefined ? grelha['F1']?.avaliador2 : null) ??
-    grelha['F1']?.avaliador1 ??
-    15;
-
   return (
     <div className="p-4 sm:p-6 bg-slate-50/50 space-y-4">
       {/* Top Tactical Banner */}
@@ -215,7 +209,7 @@ export function Bloco03Grelha({
             )}
           </div>
           <p className="text-xs text-slate-500 mt-1">
-            Pontuação regimental: <strong className="text-slate-800">5</strong> (Insuficiente), <strong className="text-slate-800">10</strong> (Regular), <strong className="text-slate-800">15</strong> (Bom), <strong className="text-slate-800">20</strong> (Excelente).
+            Pontuação regimental: <strong className="text-slate-800">5</strong> (Insuficiente), <strong className="text-slate-800">10</strong> (Regular), <strong className="text-slate-800">15</strong> (Nível 15), <strong className="text-slate-800">20</strong> (Excelente).
           </p>
         </div>
 
@@ -238,20 +232,6 @@ export function Bloco03Grelha({
           </span>
         </div>
       </div>
-
-      {/* BLOCO 2: Bloco de Integridade com 4 itens de 5 pontos */}
-      <BlocoIntegridade
-        valorAtual={notaF1Atual}
-        readOnly={readOnly || isAvaliado || (!canEditAval1 && !canEditAval2 && !canEditCmdte)}
-        avaliadorLabel={
-          avaliadorAtivo === 'cmdte'
-            ? 'Comandante'
-            : avaliadorAtivo === 'avaliador2'
-            ? '2º Avaliador'
-            : '1º Avaliador'
-        }
-        onChange={(novoNivel) => handleNotaChange('F1', avaliadorAtivo, novoNivel)}
-      />
 
       {/* Group Navigation Bar - Reduces cognitive load */}
       <div className="flex flex-wrap items-center justify-between gap-2 p-2 bg-white rounded-xl border border-slate-200/80 text-xs shadow-2xs">
@@ -334,7 +314,7 @@ export function Bloco03Grelha({
                   className="bg-white/10 hover:bg-white/20 text-white border-white/20 text-[11px] h-7 px-2.5 rounded-lg font-semibold cursor-pointer"
                 >
                   <Sparkles className="w-3 h-3 text-[#D4AF37] mr-1" />
-                  Preencher Base (15 - Bom)
+                  Preencher Base (Nível 15)
                 </Button>
                 <Button
                   type="button"
@@ -452,11 +432,15 @@ export function Bloco03Grelha({
                   const valAval1 = notaFator.avaliador1 ?? 15;
                   const valAval2 = notaFator.avaliador2;
                   const valCmdte = notaFator.cmdte;
+                  const valEfetivoAtual =
+                    (numeroAvaliadores === 3 && valCmdte !== undefined ? valCmdte : null) ??
+                    (valAval2 !== undefined ? valAval2 : null) ??
+                    valAval1;
 
                   return (
-                    <tr
-                      key={fator.id}
-                      className={cn(
+                    <React.Fragment key={fator.id}>
+                      <tr
+                        className={cn(
                         'transition-colors',
                         isExcluded
                           ? 'bg-slate-50/70 text-slate-400 select-none'
@@ -496,28 +480,23 @@ export function Bloco03Grelha({
                           {fator.descricao}
                         </p>
 
-                        {/* Critérios Regulamentares Expansíveis */}
-                        {fator.subitens && fator.subitens.length > 0 && !isExcluded && (
-                          <div className="mt-1">
+                        {/* Botão Detalhar com Critérios e Padrões Oficiais */}
+                        {!isExcluded && (
+                          <div className="mt-2 flex items-center gap-2">
                             <button
                               type="button"
                               onClick={() => setFatorExpandido(fatorExpandido === fator.id ? null : fator.id)}
-                              className="text-[10px] font-mono font-semibold text-[#0F3323] hover:text-[#B89047] inline-flex items-center gap-1 transition-colors cursor-pointer"
+                              className={cn(
+                                'text-[11px] font-mono font-semibold px-2.5 py-1 rounded-lg inline-flex items-center gap-1.5 transition-all cursor-pointer border shadow-2xs',
+                                fatorExpandido === fator.id
+                                  ? 'bg-[#0F3323] text-white border-[#0F3323]'
+                                  : 'bg-white hover:bg-slate-100 text-slate-700 border-slate-300/80 hover:text-slate-900'
+                              )}
                             >
-                              <ListChecks className="w-3 h-3 text-[#B89047]" />
-                              {fatorExpandido === fator.id ? 'Ocultar critérios' : 'Ver 4 critérios regulamentares'}
-                              {fatorExpandido === fator.id ? <ChevronUp className="w-2.5 h-2.5" /> : <ChevronDown className="w-2.5 h-2.5" />}
+                              <BookOpen className="w-3.5 h-3.5 text-[#B89047]" />
+                              <span>{fatorExpandido === fator.id ? 'Fechar Detalhe' : 'Detalhar'}</span>
+                              {fatorExpandido === fator.id ? <ChevronUp className="w-3 h-3 opacity-70" /> : <ChevronDown className="w-3 h-3 opacity-70" />}
                             </button>
-
-                            {fatorExpandido === fator.id && (
-                              <div className="mt-1.5 p-2 bg-slate-50 border border-slate-200 rounded-lg text-[10px] text-slate-700 space-y-1 animate-in fade-in">
-                                <ol className="list-decimal pl-4 space-y-0.5">
-                                  {fator.subitens.map((sub, sIdx) => (
-                                    <li key={sIdx} className="leading-tight">{sub}</li>
-                                  ))}
-                                </ol>
-                              </div>
-                            )}
                           </div>
                         )}
                       </td>
@@ -546,7 +525,7 @@ export function Bloco03Grelha({
                                   isSelected
                                     ? n === 20
                                       ? 'bg-gradient-to-r from-[#B89047] to-[#D4AF37] text-slate-950 shadow-xs ring-1 ring-amber-400'
-                                      : n === 15
+                                    : n === 15
                                       ? 'bg-[#0F3323] text-white shadow-xs'
                                       : n === 10
                                       ? 'bg-amber-600 text-white shadow-xs'
@@ -675,12 +654,178 @@ export function Bloco03Grelha({
                       </td>
                     )}
                   </tr>
-                );
-              }))}
-            </tbody>
-          </table>
-        </div>
+
+                  {/* PAINEL EXPANSÍVEL: DETALHAR PADRÕES OFICIAIS REGIMENTAIS */}
+                  {fatorExpandido === fator.id && !isExcluded && (
+                    <tr className="bg-slate-50/90 border-b border-slate-200">
+                      <td colSpan={6} className="p-4 sm:p-5">
+                        <div className="bg-white rounded-2xl border border-slate-200 p-4 sm:p-5 shadow-sm space-y-4 animate-in fade-in duration-200">
+                          {/* Cabeçalho do Painel Detalhado */}
+                          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-3 border-b border-slate-100">
+                            <div className="flex items-center gap-2">
+                              <span className="w-7 h-7 rounded-lg bg-[#0F3323]/10 text-[#0F3323] font-mono font-bold text-xs flex items-center justify-center">
+                                {fator.id}
+                              </span>
+                              <div>
+                                <h4 className="text-xs font-black uppercase text-slate-900 tracking-wide">
+                                  {fator.nome} • Padrões Descritivos do Regulamento Militar
+                                </h4>
+                                <p className="text-[11px] text-slate-500 mt-0.5">
+                                  {fator.descricao}
+                                </p>
+                              </div>
+                            </div>
+
+                            {/* Nota Atual do Avaliador Ativo */}
+                            <div className="flex items-center gap-2 bg-slate-50 px-3 py-1.5 rounded-xl border border-slate-200 self-start sm:self-auto shrink-0">
+                              <span className="text-[10px] font-mono uppercase font-bold text-slate-500">
+                                Pontuação Atual:
+                              </span>
+                              <span
+                                className={cn(
+                                  'text-xs font-mono font-black px-2 py-0.5 rounded-md shadow-2xs',
+                                  valEfetivoAtual === 20
+                                    ? 'bg-gradient-to-r from-[#B89047] to-[#D4AF37] text-slate-950 font-black'
+                                    : valEfetivoAtual === 15
+                                    ? 'bg-[#0F3323] text-white'
+                                    : valEfetivoAtual === 10
+                                    ? 'bg-amber-600 text-white'
+                                    : 'bg-rose-600 text-white'
+                                )}
+                              >
+                                {valEfetivoAtual} pts
+                              </span>
+                            </div>
+                          </div>
+
+                          {/* Grid dos 4 Níveis Descritivos Oficiais */}
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                            {([20, 15, 10, 5] as NivelFator[]).map((nivel) => {
+                              const isSelected = valEfetivoAtual === nivel;
+                              const canEdit =
+                                avaliadorAtivo === 'cmdte'
+                                  ? canEditCmdte
+                                  : avaliadorAtivo === 'avaliador2'
+                                  ? canEditAval2
+                                  : canEditAval1;
+
+                              const textoNivel =
+                                fator.niveisPadrao?.[nivel] ||
+                                (nivel === 20
+                                  ? 'Revela desempenho excepcional no factor observado.'
+                                  : nivel === 15
+                                  ? 'Revela bom desempenho, cumprindo com eficácia as exigências militares.'
+                                  : nivel === 10
+                                  ? 'Revela algumas dificuldades e irregularidade no cumprimento do factor.'
+                                  : 'Revela graves insuficiências e desempenho abaixo do padrão militar.');
+
+                              return (
+                                <div
+                                  key={nivel}
+                                  onClick={() => {
+                                    if (canEdit) {
+                                      handleNotaChange(fator.id, avaliadorAtivo, nivel);
+                                    }
+                                  }}
+                                  className={cn(
+                                    'relative p-3.5 rounded-xl border transition-all text-left flex flex-col justify-between select-none',
+                                    canEdit ? 'cursor-pointer' : 'cursor-default',
+                                    isSelected
+                                      ? nivel === 20
+                                        ? 'bg-amber-50/70 border-amber-300 ring-1 ring-amber-300 shadow-xs'
+                                        : nivel === 15
+                                        ? 'bg-emerald-50/70 border-emerald-300 ring-1 ring-emerald-300 shadow-xs'
+                                        : nivel === 10
+                                        ? 'bg-amber-50/50 border-amber-300 ring-1 ring-amber-300 shadow-xs'
+                                        : 'bg-rose-50/60 border-rose-300 ring-1 ring-rose-300 shadow-xs'
+                                      : 'bg-slate-50/60 border-slate-200 hover:bg-slate-100/80 hover:border-slate-300'
+                                  )}
+                                >
+                                  <div>
+                                    <div className="flex items-center justify-between gap-2 pb-2 mb-2 border-b border-slate-200/60">
+                                      <div className="flex items-center gap-1.5">
+                                        <div
+                                          className={cn(
+                                            'w-4 h-4 rounded flex items-center justify-center text-[10px] font-mono font-bold',
+                                            isSelected
+                                              ? 'bg-[#0F3323] text-white'
+                                              : 'bg-slate-200 text-slate-600'
+                                          )}
+                                        >
+                                          {isSelected ? '✓' : ''}
+                                        </div>
+                                        <span className="text-[11px] font-mono font-bold text-slate-900">
+                                          {nivel === 20
+                                            ? 'Nível 20 (Excelente)'
+                                            : nivel === 15
+                                            ? 'Nível 15'
+                                            : nivel === 10
+                                            ? 'Nível 10 (Regular)'
+                                            : 'Nível 5 (Insuficiente)'}
+                                        </span>
+                                      </div>
+                                      <span
+                                        className={cn(
+                                          'text-[10px] font-mono font-bold px-1.5 py-0.5 rounded border',
+                                          isSelected
+                                            ? 'bg-white text-slate-900 border-slate-300 shadow-2xs'
+                                            : 'text-slate-500 border-transparent'
+                                        )}
+                                      >
+                                        +{nivel} pts
+                                      </span>
+                                    </div>
+
+                                    <p className="text-xs text-slate-700 leading-relaxed font-normal">
+                                      {textoNivel}
+                                    </p>
+                                  </div>
+
+                                  {canEdit && (
+                                    <div className="pt-2.5 mt-2 flex justify-end">
+                                      <span
+                                        className={cn(
+                                          'text-[10px] font-mono font-bold',
+                                          isSelected ? 'text-[#0F3323]' : 'text-slate-400 group-hover:text-slate-600'
+                                        )}
+                                      >
+                                        {isSelected ? '● Selecionado' : 'Clique para atribuir'}
+                                      </span>
+                                    </div>
+                                  )}
+                                </div>
+                              );
+                            })}
+                          </div>
+
+                          {/* Subitens doutrinários de apoio */}
+                          {fator.subitens && fator.subitens.length > 0 && (
+                            <div className="p-3 bg-slate-50 border border-slate-200 rounded-xl space-y-1.5 text-[11px]">
+                              <span className="font-mono font-bold text-slate-700 uppercase tracking-wide block">
+                                Critérios de Observação Doutrinária:
+                              </span>
+                              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-slate-600">
+                                {fator.subitens.map((sub, sIdx) => (
+                                  <div key={sIdx} className="flex items-start gap-1.5">
+                                    <span className="text-[#B89047] font-bold">•</span>
+                                    <span className="leading-tight">{sub}</span>
+                                  </div>
+                                ))}
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      </td>
+                    </tr>
+                  )}
+                </React.Fragment>
+              );
+            })
+          )}
+          </tbody>
+        </table>
       </div>
     </div>
-  );
+  </div>
+);
 }
